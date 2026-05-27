@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
+from app.api.families import router as families_router
 from app.core.config import settings
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Family Butler API",
-        version="0.2.0",
+        version="0.3.0",
         description="Backend API for the Family Butler WeChat Mini Program",
     )
 
@@ -17,6 +18,7 @@ def create_app() -> FastAPI:
 
     # Register API routers
     app.include_router(auth_router, prefix="/v1")
+    app.include_router(families_router, prefix="/v1")
 
     return app
 
