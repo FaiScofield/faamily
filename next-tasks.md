@@ -4,36 +4,36 @@
 
 ## A. 把云端代码落地并进入版本管理
 
-- [ ] 从云端下载源码包：`/workspace/export/faamily-backend.tar.gz` 到 PC 本地
-- [ ] （可选）从云端下载 Git bundle：`/workspace/export/faamily-backend.bundle`，用于保留提交历史
-- [ ] 在 PC 本地解压/恢复仓库
+- [x] 从云端下载源码包：`/workspace/export/faamily-backend.tar.gz` 到 PC 本地
+- [x] （可选）从云端下载 Git bundle：`/workspace/export/faamily-backend.bundle`，用于保留提交历史
+- [x] 在 PC 本地解压/恢复仓库
   - 源码包：解压后得到工程目录
   - bundle：`git clone /path/to/faamily-backend.bundle .`
-- [ ] 绑定远程仓库并推送到 Gitee：`https://gitee.com/vance_wu/faamily.git`
-- [ ] 在 Gitee 上检查：分支为 `main`，文件包含 `app/`、`db/schema.sql`、`README.md`
+- [x] 绑定远程仓库并推送到 GitHub：`https://github.com/FaiScofield/faamily`
+- [x] 在 GitHub 上检查：分支为 `main`，文件包含 `app/`、`db/schema.sql`、`README.md`
 
 ## B. 本地可运行（开发环境基线）
 
 - [ ] 启动 PostgreSQL（docker compose）
 - [ ] 创建 Python 虚拟环境并安装依赖（requirements.txt）
 - [ ] 配置 `.env`（从 `.env.example` 复制）
-- [ ] 初始化数据库（执行 `db/schema.sql`）
+- [ ] 初始化数据库（执行 `alembic upgrade head`）
 - [ ] 启动 API 服务并通过 `/health` 验证
 
 ## C. 数据库与迁移体系（避免后期返工）
 
-- [ ] 引入 Alembic 迁移（把 `db/schema.sql` 迁移为可追踪的版本）
+- [x] 引入 Alembic 迁移（把 `db/schema.sql` 迁移为可追踪的版本）
 - [ ] 为关键字段补充一致性约束/索引审视（family_id 维度查询、软删除、审计）
 - [ ] 设计配额扣减/回收策略并落地（上传完成扣减、删除回收、并发保护）
 
 ## D. M1 账号与身份（FastAPI）
 
-- [ ] 统一用户模型：`users` + `user_identities`
-- [ ] 登录方式（按优先级）
-  - [ ] 游客：创建匿名用户并发放 token
-  - [ ] 邮箱：注册/登录/验证邮箱（后续保险箱 OTP 依赖）
-  - [ ] 微信小程序：支持 `openid` + `unionid` 绑定（能拿到 unionid 时优先绑定）
-- [ ] JWT（access/refresh）签发与刷新
+- [x] 统一用户模型：`users` + `user_identities`（SQLAlchemy ORM）
+- [x] 登录方式（按优先级）
+  - [x] 游客：创建匿名用户并发放 token
+  - [x] 邮箱：注册/登录/验证邮箱（后续保险箱 OTP 依赖）
+  - [x] 微信小程序：支持 `openid` + `unionid` 绑定（能拿到 unionid 时优先绑定）
+- [x] JWT（access/refresh）签发与刷新
 - [ ] 基础安全：限流策略（邮箱验证码、登录、邀请码 join）
 
 ## E. M2 家庭体系（家庭 / 成员 / 邀请码）
