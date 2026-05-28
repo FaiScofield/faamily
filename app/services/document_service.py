@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.models import File, Folder, Quota, VaultEmailOtp, VaultSession
+from app.services.audit_service import write_audit_log
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +227,12 @@ def soft_delete_file(db: Session, file: File) -> None:
     quota = db.query(Quota).filter(Quota.family_id == file.family_id).first()
     if quota:
         quota.used_bytes = max(0, quota.used_bytes - file.size_bytes)
+
+    write_audit_log(
+        db, str(file.family_id), "system", "file.deleted",
+        target_type="file", target_id=str(file.id),
+        detail={"filename": file.filename, "size_bytes": file.size_bytes, "zone": file.zone},
+    )
 
     db.commit()
 

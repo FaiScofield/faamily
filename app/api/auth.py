@@ -13,7 +13,9 @@ Endpoints:
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
@@ -45,6 +47,9 @@ from app.services.auth_service import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# Rate limiter for auth endpoints
+limiter = Limiter(key_func=get_remote_address)
+
 
 # ---------------------------------------------------------------------------
 # Guest Login
@@ -52,12 +57,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/guest", response_model=GuestLoginResponse)
-def guest_login(db: Session = Depends(get_db)):
-    """Create an anonymous guest user and return tokens.
-
-    The guest user can later bind a real identity (email, phone, wechat)
-    to upgrade to a full account.
-    """
+@limiter.limit("5/minute")
+def guest_login(request: Request, db: Session = Depends(get_db)):
+    """Create an anonymous guest user and return tokens."""
     user = create_anonymous_user(db)
     access_token = create_access_token(str(user.id))
     refresh_token = create_refresh_token(str(user.id))
@@ -75,7 +77,8 @@ def guest_login(db: Session = Depends(get_db)):
 
 
 @router.post("/email/register", response_model=TokenResponse)
-def email_register(body: EmailRegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def email_register(request: Request, body: EmailRegisterRequest, db: Session = Depends(get_db)):
     """Register a new user with email and password.
 
     The email identity is created but not verified until the user
@@ -123,7 +126,8 @@ def email_register(body: EmailRegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/email/login", response_model=TokenResponse)
-def email_login(body: EmailLoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def email_login(request: Request, body: EmailLoginRequest, db: Session = Depends(get_db)):
     """Authenticate with email and password."""
     from app.models import UserIdentity
 
@@ -162,7 +166,8 @@ def email_login(body: EmailLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/email/send-otp")
-def email_send_otp(body: EmailSendOtpRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def email_send_otp(request: Request, body: EmailSendOtpRequest, db: Session = Depends(get_db)):
     """Request an OTP code for email verification.
 
     TODO: Integrate with an email sending service (e.g. SendGrid, SES).
@@ -236,7 +241,8 @@ def email_verify(body: EmailVerifyRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/wechat/login", response_model=WechatLoginResponse)
-def wechat_login(body: WechatLoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def wechat_login(request: Request, body: WechatLoginRequest, db: Session = Depends(get_db)):
     """Login via WeChat Mini Program.
 
     TODO: Exchange the wx.login code for openid/unionid via WeChat API.

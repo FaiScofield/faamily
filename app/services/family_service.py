@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.models import Family, Invite, Membership, Quota, User
+from app.services.audit_service import write_audit_log
 
 
 def generate_invite_code(length: int = 8) -> str:
@@ -68,6 +69,13 @@ def create_family(
     )
     db.add(quota)
 
+    # Audit: family created
+    write_audit_log(
+        db, str(family.id), str(owner.id), "family.created",
+        target_type="family", target_id=str(family.id),
+        detail={"name": name},
+    )
+
     db.commit()
     db.refresh(family)
     return family
@@ -109,6 +117,11 @@ def update_family(
         family.name = name
     if avatar_url is not None:
         family.avatar_url = avatar_url
+
+    write_audit_log(
+        db, str(family.id), "system", "family.updated",
+        target_type="family", target_id=str(family.id),
+    )
 
     db.commit()
     db.refresh(family)
@@ -179,6 +192,13 @@ def remove_member(db: Session, membership: Membership) -> None:
         membership: Membership to remove.
     """
     membership.status = "removed"
+
+    write_audit_log(
+        db, str(membership.family_id), "system", "member.removed",
+        target_type="membership", target_id=str(membership.id),
+        detail={"user_id": str(membership.user_id), "role": membership.role},
+    )
+
     db.commit()
 
 
@@ -202,6 +222,15 @@ def transfer_ownership(
     # Swap roles
     current_owner_membership.role = "admin"
     new_owner_membership.role = "owner"
+
+    write_audit_log(
+        db, str(family.id), str(current_owner_membership.user_id), "member.ownership_transferred",
+        target_type="membership", target_id=str(new_owner_membership.id),
+        detail={
+            "from_user_id": str(current_owner_membership.user_id),
+            "to_user_id": str(new_owner_membership.user_id),
+        },
+    )
 
     db.commit()
 
