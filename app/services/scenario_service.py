@@ -78,6 +78,23 @@ BUILTIN_TEMPLATES: list[dict] = [
             "features": ["warranty_tracking", "purchase_record"],
         },
     },
+    {
+        "key": "pet_care",
+        "name": "宠物照料",
+        "version": 1,
+        "definition": {
+            "description": "宠物照料场景：喂养/遛狗/驱虫/疫苗记录，宠物档案与健康资料归档",
+            "task_types": ["喂养", "遛狗/放风", "驱虫", "疫苗", "洗澡", "体检"],
+            "default_folders": [
+                {"zone": "shared", "name": "日常记录"},
+                {"zone": "shared", "name": "宠物照片"},
+                {"zone": "shared", "name": "疫苗记录"},
+                {"zone": "vault", "name": "宠物证件"},
+                {"zone": "vault", "name": "医疗报告"},
+            ],
+            "features": ["daily_log", "vaccine_schedule", "pet_profile"],
+        },
+    },
 ]
 
 

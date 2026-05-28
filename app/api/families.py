@@ -6,9 +6,10 @@ Endpoints:
 - GET    /families/{id}         — Get family details
 - PUT    /families/{id}         — Update family
 - DELETE /families/{id}         — Delete family
-- GET    /families/{id}/members — List family members
-- PUT    /families/{id}/members/{user_id}/role — Update member role
-- DELETE /families/{id}/members/{user_id}      — Remove member
+- GET    /families/{id}/members             — List family members
+- PUT    /families/{id}/members/{user_id}/role        — Update member role
+- PUT    /families/{id}/members/{user_id}/permissions — Update member permissions
+- DELETE /families/{id}/members/{user_id}             — Remove member
 - POST   /families/{id}/invites — Create invite code
 - GET    /families/{id}/invites — List invite codes
 - DELETE /families/{id}/invites/{invite_id}    — Disable invite code
@@ -21,13 +22,13 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.core.permissions import (
     FamilyNotFound,
-    FamilyPermissionChecker,
     PermissionDenied,
     can_manage_member,
     can_transfer_ownership,
     require_admin,
     require_any_role,
     require_owner,
+    set_permission,
 )
 from app.db import get_db
 from app.models import Family, Membership, User
@@ -42,6 +43,7 @@ from app.schemas.family import (
     JoinByInviteRequest,
     JoinByInviteResponse,
     MemberListResponse,
+    MemberPermissionsUpdateRequest,
     MemberRemoveRequest,
     MemberResponse,
     MemberRoleUpdateRequest,
@@ -49,10 +51,8 @@ from app.schemas.family import (
 from app.services.family_service import (
     create_family,
     create_invite,
-    delete_family,
     disable_invite,
     get_family_invites,
-    get_family_members,
     get_invite_by_code,
     get_membership,
     get_user_families,
@@ -171,11 +171,7 @@ def update_member_role_endpoint(
     actor_membership: Membership = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Update a member's role (owner or admin only).
-
-    Owners can change anyone's role except other owners.
-    Admins can only change members and children.
-    """
+    """Update a member's role (owner or admin only)."""
     # Cannot change own role through this endpoint
     if str(actor_membership.user_id) == user_id:
         raise HTTPException(
@@ -214,6 +210,39 @@ def update_member_role_endpoint(
     return target_membership
 
 
+@router.put("/{family_id}/members/{user_id}/permissions", response_model=MemberResponse)
+def update_member_permissions_endpoint(
+    family_id: str,
+    user_id: str,
+    body: MemberPermissionsUpdateRequest,
+    actor_membership: Membership = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Update a member's permission flags (owner or admin only).
+
+    Used for child-like restrictions — e.g. {'restricted': true} limits
+    the member's access to certain family features.
+    """
+    target_membership = get_membership(db, family_id, user_id)
+    if not target_membership or target_membership.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found",
+        )
+
+    # Check if actor can manage target
+    if not can_manage_member(actor_membership, target_membership):
+        raise PermissionDenied("You cannot modify this member's permissions")
+
+    # Update permission flags
+    for flag, value in body.permissions.items():
+        set_permission(target_membership, flag, value)
+
+    db.commit()
+    db.refresh(target_membership)
+    return target_membership
+
+
 @router.delete("/{family_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_member_endpoint(
     family_id: str,
@@ -224,7 +253,7 @@ def remove_member_endpoint(
     """Remove a member from the family (owner or admin only).
 
     Owners can remove anyone except other owners.
-    Admins can only remove members and children.
+    Admins can only remove members.
     """
     # Cannot remove self through this endpoint
     if str(actor_membership.user_id) == user_id:
@@ -339,7 +368,6 @@ def join_family_endpoint(
         )
 
     if invite.need_approval:
-        # TODO: Implement approval workflow
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="Invite requires approval (not implemented yet)",

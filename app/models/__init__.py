@@ -69,6 +69,16 @@ class User(TimestampMixin, Base):
         default=0,
         comment="0=active, 1=disabled",
     )
+    region: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Province/region for geographic stats, populated from identity extra",
+    )
+    last_activity_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Last request timestamp for online tracking",
+    )
 
     # relationships
     identities: Mapped[list["UserIdentity"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -79,6 +89,8 @@ class User(TimestampMixin, Base):
 
     __table_args__ = (
         Index("idx_users_status", "status"),
+        Index("idx_users_region", "region"),
+        Index("idx_users_last_activity", "last_activity_at"),
     )
 
 
@@ -166,7 +178,7 @@ class Family(TimestampMixin, Base):
 
 
 class Membership(TimestampMixin, Base):
-    """Maps a user into a family with a specific role."""
+    """Maps a user into a family with a specific role and optional restrictions."""
 
     __tablename__ = "memberships"
 
@@ -188,7 +200,14 @@ class Membership(TimestampMixin, Base):
     role: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
-        comment="'owner' | 'admin' | 'member' | 'child'",
+        comment="'owner' | 'admin' | 'member'",
+    )
+    permissions: Mapped[dict] = mapped_column(
+        JSONB,
+        default=dict,
+        server_default="{}",
+        nullable=False,
+        comment="Flag-based permissions, e.g. {'restricted': true} for child-like limits",
     )
     status: Mapped[str] = mapped_column(
         String(20),
@@ -208,7 +227,7 @@ class Membership(TimestampMixin, Base):
     user: Mapped["User"] = relationship(back_populates="memberships")
 
     __table_args__ = (
-        CheckConstraint("role IN ('owner', 'admin', 'member', 'child')", name="chk_memberships_role"),
+        CheckConstraint("role IN ('owner', 'admin', 'member')", name="chk_memberships_role"),
         CheckConstraint("status IN ('active', 'pending', 'removed')", name="chk_memberships_status"),
         UniqueConstraint("family_id", "user_id", name="uq_memberships_family_user"),
         Index("idx_memberships_family_role", "family_id", "role"),
@@ -746,4 +765,70 @@ class AuditLog(Base):
     __table_args__ = (
         Index("idx_audit_logs_family_created", "family_id", "created_at"),
         Index("idx_audit_logs_action", "action"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# VIP Subscription
+# ---------------------------------------------------------------------------
+
+
+class VipSubscription(Base):
+    """User VIP subscription record.
+
+    Supports multiple tiers: free (default), basic, premium, enterprise.
+    Free users have no subscription record — a record is created upon first upgrade.
+    """
+
+    __tablename__ = "vip_subscriptions"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tier: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="free",
+        comment="'free' | 'basic' | 'premium' | 'enterprise'",
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Null means no expiry (permanent or free tier)",
+    )
+    auto_renew: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+    payment_provider: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    payment_id: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        CheckConstraint("tier IN ('free', 'basic', 'premium', 'enterprise')", name="chk_vip_subscriptions_tier"),
+        Index("idx_vip_subscriptions_tier", "tier"),
     )

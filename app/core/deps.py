@@ -1,10 +1,13 @@
 """FastAPI dependency for extracting the current user from JWT."""
 
+from datetime import datetime, timezone
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import decode_token
 from app.db import get_db
 from app.models import User
@@ -17,6 +20,8 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     """Extract and validate the current user from the Authorization header.
+
+    Also updates last_activity_at for online tracking.
 
     Args:
         credentials: Bearer token extracted by FastAPI.
@@ -38,7 +43,6 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Ensure this is an access token, not a refresh token
     if payload.get("type") != "access":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -59,6 +63,10 @@ def get_current_user(
             detail="User not found or disabled",
         )
 
+    # Update last activity timestamp for online tracking
+    user.last_activity_at = datetime.now(timezone.utc)
+    db.commit()
+
     return user
 
 
@@ -76,3 +84,22 @@ def get_optional_user(
         return get_current_user(credentials, db)
     except HTTPException:
         return None
+
+
+def require_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Require the current user to be an admin.
+
+    Admin users are defined by UUID in the ADMIN_USER_IDS config.
+
+    Raises:
+        HTTPException 403: If the user is not an admin.
+    """
+    admin_ids = [uid.strip() for uid in settings.admin_user_ids.split(",") if uid.strip()]
+    if str(current_user.id) not in admin_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user

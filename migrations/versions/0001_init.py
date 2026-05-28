@@ -29,10 +29,14 @@ def upgrade() -> None:
         "users",
         sa.Column("id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("status", sa.SmallInteger(), nullable=False, server_default="0"),
+        sa.Column("region", sa.Text(), nullable=True),
+        sa.Column("last_activity_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
     op.create_index("idx_users_status", "users", ["status"])
+    op.create_index("idx_users_region", "users", ["region"])
+    op.create_index("idx_users_last_activity", "users", ["last_activity_at"])
 
     # -----------------------------------------------------------------------
     # user_identities
@@ -77,13 +81,14 @@ def upgrade() -> None:
         sa.Column("family_id", UUID(as_uuid=True), sa.ForeignKey("families.id", ondelete="CASCADE"), nullable=False),
         sa.Column("user_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("role", sa.String(20), nullable=False),
+        sa.Column("permissions", JSONB(), nullable=False, server_default="{}"),
         sa.Column("status", sa.String(20), nullable=False, server_default="active"),
         sa.Column("display_name", sa.Text(), nullable=True),
         sa.Column("joined_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
-    op.create_check_constraint("chk_memberships_role", "memberships", "role IN ('owner', 'admin', 'member', 'child')")
+    op.create_check_constraint("chk_memberships_role", "memberships", "role IN ('owner', 'admin', 'member')")
     op.create_check_constraint("chk_memberships_status", "memberships", "status IN ('active', 'pending', 'removed')")
     op.create_unique_constraint("uq_memberships_family_user", "memberships", ["family_id", "user_id"])
     op.create_index("idx_memberships_family_role", "memberships", ["family_id", "role"])
@@ -319,10 +324,31 @@ def upgrade() -> None:
     op.create_index("idx_audit_logs_family_created", "audit_logs", ["family_id", sa.text("created_at DESC")])
     op.create_index("idx_audit_logs_action", "audit_logs", ["action"])
 
+    # -----------------------------------------------------------------------
+    # vip_subscriptions
+    # -----------------------------------------------------------------------
+    op.create_table(
+        "vip_subscriptions",
+        sa.Column("user_id", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+        sa.Column("tier", sa.String(20), nullable=False, server_default="free"),
+        sa.Column("started_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("auto_renew", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column("payment_provider", sa.Text(), nullable=True),
+        sa.Column("payment_id", sa.Text(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+    )
+    op.create_check_constraint(
+        "chk_vip_subscriptions_tier", "vip_subscriptions",
+        "tier IN ('free', 'basic', 'premium', 'enterprise')",
+    )
+    op.create_index("idx_vip_subscriptions_tier", "vip_subscriptions", ["tier"])
+
 
 def downgrade() -> None:
     # Drop all tables in reverse dependency order
     tables = [
+        "vip_subscriptions",
         "audit_logs",
         "scenario_instances",
         "scenario_templates",

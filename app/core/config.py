@@ -10,5 +10,9 @@ class Settings(BaseSettings):
     jwt_access_token_expires_minutes: int = 30
     jwt_refresh_token_expires_days: int = 30
 
+    # Admin configuration (comma-separated user UUIDs in .env)
+    admin_user_ids: str = ""
+    online_timeout_minutes: int = 15
+
 
 settings = Settings()

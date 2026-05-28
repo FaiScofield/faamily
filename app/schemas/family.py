@@ -53,7 +53,11 @@ class MemberResponse(BaseModel):
 
     membership_id: str
     user_id: str
-    role: str = Field(description="owner | admin | member | child")
+    role: str = Field(description="owner | admin | member")
+    permissions: dict = Field(
+        default_factory=dict,
+        description="Flag-based restrictions, e.g. {'restricted': true}",
+    )
     status: str = Field(description="active | pending | removed")
     display_name: str | None
     joined_at: datetime
@@ -70,7 +74,13 @@ class MemberListResponse(BaseModel):
 class MemberRoleUpdateRequest(BaseModel):
     """Request body for updating a member's role."""
 
-    role: str = Field(description="owner | admin | member | child")
+    role: str = Field(description="owner | admin | member")
+
+
+class MemberPermissionsUpdateRequest(BaseModel):
+    """Request body for updating a member's permission flags."""
+
+    permissions: dict = Field(description="Permission flags to set, e.g. {'restricted': true}")
 
 
 class MemberRemoveRequest(BaseModel):

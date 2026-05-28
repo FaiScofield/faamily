@@ -2,7 +2,8 @@
 
 Provides dependency injectors for FastAPI to enforce:
 - Family membership validation
-- Role-based access control (owner/admin/member/child)
+- Role-based access control (owner/admin/member)
+- Permission flag checking (e.g. 'restricted' for child-like limits)
 """
 
 from fastapi import Depends, HTTPException, status
@@ -48,12 +49,10 @@ def require_family_member(
     Raises:
         FamilyNotFound: If family doesn't exist or user is not a member.
     """
-    # Check family exists
     family = db.query(Family).filter(Family.id == family_id).first()
     if not family:
         raise FamilyNotFound()
 
-    # Check membership
     membership = db.query(Membership).filter(
         Membership.family_id == family_id,
         Membership.user_id == current_user.id,
@@ -112,7 +111,7 @@ class FamilyPermissionChecker:
         """Initialize with allowed roles.
 
         Args:
-            roles: One or more role names (owner, admin, member, child).
+            roles: One or more role names (owner, admin, member).
         """
         self.allowed_roles = list(roles)
 
@@ -129,8 +128,33 @@ class FamilyPermissionChecker:
 # Predefined permission checkers for common use cases
 require_owner = FamilyPermissionChecker("owner")
 require_admin = FamilyPermissionChecker("owner", "admin")
-require_member = FamilyPermissionChecker("owner", "admin", "member")
-require_any_role = FamilyPermissionChecker("owner", "admin", "member", "child")
+require_any_role = FamilyPermissionChecker("owner", "admin", "member")
+
+
+def has_permission(membership: Membership, flag: str) -> bool:
+    """Check if a member has a specific permission flag set.
+
+    Args:
+        membership: The Membership object.
+        flag: Permission flag key (e.g. 'restricted').
+
+    Returns:
+        True if the flag is truthy in permissions dict.
+    """
+    return bool(membership.permissions.get(flag)) if membership.permissions else False
+
+
+def set_permission(membership: Membership, flag: str, value: bool) -> None:
+    """Set a permission flag on a membership.
+
+    Args:
+        membership: The Membership object to modify.
+        flag: Permission flag key.
+        value: Flag value (True/False).
+    """
+    if membership.permissions is None:
+        membership.permissions = {}
+    membership.permissions[flag] = value
 
 
 def can_manage_member(
@@ -140,9 +164,9 @@ def can_manage_member(
     """Check if actor can manage (modify/remove) target member.
 
     Rules:
-    - Owner can manage admin/member/child, but not other owners
-    - Admin can manage member/child, but not owners or other admins
-    - Member/Child cannot manage anyone
+    - Owner can manage admin/member, but not other owners
+    - Admin can manage members, but not owners or other admins
+    - Member cannot manage anyone
 
     Args:
         actor_membership: Membership of the user performing the action.
@@ -155,13 +179,10 @@ def can_manage_member(
     target_role = target_membership.role
 
     if actor_role == "owner":
-        # Owner can manage anyone except other owners
         return target_role != "owner"
     elif actor_role == "admin":
-        # Admin can manage members and children only
-        return target_role in ("member", "child")
+        return target_role == "member"
     else:
-        # Members and children cannot manage anyone
         return False
 
 
