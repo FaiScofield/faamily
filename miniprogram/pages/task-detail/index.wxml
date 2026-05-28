@@ -1,0 +1,151 @@
+<!-- Task detail page: task info, submissions, actions -->
+<view class="page-task-detail">
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <loading />
+  </view>
+
+  <!-- Error -->
+  <view wx:elif="{{!task}}" class="empty-state">
+    <text>任务不存在或已删除</text>
+  </view>
+
+  <view wx:else class="detail-content">
+    <!-- ====== Task Info Section ====== -->
+    <view class="card info-section">
+      <view class="section-header">
+        <text class="section-title">任务信息</text>
+        <text class="tag tag-{{task.status}}">{{statusLabel(task.status)}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">标题</text>
+        <text class="info-value">{{task.title}}</text>
+      </view>
+
+      <view wx:if="{{task.description}}" class="info-row info-row-desc">
+        <text class="info-label">描述</text>
+        <text class="info-value-desc">{{task.description}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">优先级</text>
+        <text class="info-value">{{priorityLabel(task.priority)}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">状态</text>
+        <text class="info-value">{{statusLabel(task.status)}}</text>
+      </view>
+
+      <view wx:if="{{task.due_at}}" class="info-row">
+        <text class="info-label">截止日期</text>
+        <text class="info-value">{{task.due_at}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">创建人</text>
+        <text class="info-value">{{memberName(task.created_by_user_id)}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">指派人</text>
+        <text class="info-value">{{memberName(task.assignee_user_id) || '未指派'}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">审核人</text>
+        <text class="info-value">{{memberName(task.reviewer_user_id) || '未设置'}}</text>
+      </view>
+
+      <view class="info-row">
+        <text class="info-label">创建时间</text>
+        <text class="info-value">{{task.created_at}}</text>
+      </view>
+    </view>
+
+    <!-- ====== Status Actions ====== -->
+    <view wx:if="{{statusActions.length > 0}}" class="card actions-section">
+      <view class="section-header">
+        <text class="section-title">状态操作</text>
+      </view>
+      <view class="action-buttons">
+        <button
+          wx:for="{{statusActions}}"
+          wx:key="index"
+          class="btn-action btn-{{item.type}}"
+          data-status="{{item.status}}"
+          bindtap="onStatusTransition"
+        >
+          {{item.label}}
+        </button>
+      </view>
+    </view>
+
+    <!-- ====== Submit Section ====== -->
+    <view wx:if="{{showSubmit}}" class="card submit-section">
+      <view class="section-header">
+        <text class="section-title">提交任务</text>
+      </view>
+      <textarea
+        class="submit-input"
+        placeholder="提交说明（选填）"
+        bindinput="onSubmitNoteInput"
+        value="{{submitNote}}"
+      />
+      <button class="btn-primary" bindtap="onSubmitTask">提交审核</button>
+    </view>
+
+    <!-- ====== Submissions Section ====== -->
+    <view class="card submissions-section">
+      <view class="section-header">
+        <text class="section-title">提交记录</text>
+      </view>
+
+      <view wx:if="{{submissions.length === 0}}" class="empty-sub-section">
+        <text>暂无提交记录</text>
+      </view>
+
+      <view wx:else class="submission-list">
+        <view
+          wx:for="{{submissions}}"
+          wx:key="submission_id"
+          class="submission-item"
+        >
+          <view class="submission-header">
+            <text class="submission-author">{{memberName(item.submitted_by_user_id)}}</text>
+            <text class="tag tag-{{item.status === 'approved' ? 'done' : (item.status === 'rejected' ? 'rejected' : 'submitted')}}">
+              {{item.status === 'approved' ? '已通过' : (item.status === 'rejected' ? '已驳回' : '待审核')}}
+            </text>
+          </view>
+
+          <text wx:if="{{item.note}}" class="submission-note">{{item.note}}</text>
+          <text wx:if="{{item.review_note}}" class="submission-review-note">
+            审核意见：{{item.review_note}}
+          </text>
+          <text class="submission-time">{{item.created_at}}</text>
+
+          <!-- Review buttons for the reviewer -->
+          <view wx:if="{{isReviewer && item.status === 'pending'}}" class="review-actions">
+            <button
+              class="btn-review btn-review-approve"
+              data-sub-id="{{item.submission_id}}"
+              data-action="approved"
+              bindtap="onReview"
+            >
+              通过
+            </button>
+            <button
+              class="btn-review btn-review-reject"
+              data-sub-id="{{item.submission_id}}"
+              data-action="rejected"
+              bindtap="onReview"
+            >
+              驳回
+            </button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

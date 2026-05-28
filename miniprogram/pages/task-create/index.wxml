@@ -1,0 +1,108 @@
+<!-- Task create page: form for new task -->
+<view class="page-task-create">
+  <!-- Loading members -->
+  <view wx:if="{{loadingMembers}}" class="loading-container">
+    <loading />
+  </view>
+
+  <view wx:else class="form-container">
+    <view class="card form-card">
+      <!-- Title -->
+      <view class="form-item">
+        <text class="form-label required">任务标题</text>
+        <input
+          class="form-input"
+          placeholder="请输入任务标题"
+          value="{{formData.title}}"
+          bindinput="onFieldChange"
+          data-field="title"
+        />
+      </view>
+
+      <!-- Description -->
+      <view class="form-item">
+        <text class="form-label">任务描述</text>
+        <textarea
+          class="form-textarea"
+          placeholder="请输入任务描述（选填）"
+          value="{{formData.description}}"
+          bindinput="onFieldChange"
+          data-field="description"
+        />
+      </view>
+
+      <!-- Assignee -->
+      <view class="form-item">
+        <text class="form-label">指派人</text>
+        <picker
+          mode="selector"
+          range="{{memberOptions}}"
+          range-key="label"
+          value="{{formData.assigneeIndex}}"
+          bindchange="onAssigneeChange"
+        >
+          <view class="form-picker {{formData.assigneeIndex === undefined ? 'picker-placeholder' : ''}}">
+            {{formData.assigneeIndex !== undefined ? memberOptions[formData.assigneeIndex].label : '请选择指派人（选填）'}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- Reviewer -->
+      <view class="form-item">
+        <text class="form-label">审核人</text>
+        <picker
+          mode="selector"
+          range="{{memberOptions}}"
+          range-key="label"
+          value="{{formData.reviewerIndex}}"
+          bindchange="onReviewerChange"
+        >
+          <view class="form-picker {{formData.reviewerIndex === undefined ? 'picker-placeholder' : ''}}">
+            {{formData.reviewerIndex !== undefined ? memberOptions[formData.reviewerIndex].label : '请选择审核人（选填）'}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- Priority -->
+      <view class="form-item">
+        <text class="form-label">优先级</text>
+        <picker
+          mode="selector"
+          range="{{priorityOptions}}"
+          range-key="label"
+          value="{{formData.priorityIndex}}"
+          bindchange="onPriorityChange"
+        >
+          <view class="form-picker {{formData.priorityIndex === undefined ? 'picker-placeholder' : ''}}">
+            {{formData.priorityIndex !== undefined ? priorityOptions[formData.priorityIndex].label : '请选择优先级'}}
+          </view>
+        </picker>
+      </view>
+
+      <!-- Due date -->
+      <view class="form-item">
+        <text class="form-label">截止日期</text>
+        <picker
+          mode="date"
+          value="{{formData.dueDate}}"
+          bindchange="onDueDateChange"
+        >
+          <view class="form-picker {{!formData.dueDate ? 'picker-placeholder' : ''}}">
+            {{formData.dueDate || '请选择截止日期（选填）'}}
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- Submit button -->
+    <view class="form-actions">
+      <button
+        class="btn-primary {{submitting ? 'btn-disabled' : ''}}"
+        disabled="{{submitting}}"
+        bindtap="onSubmit"
+      >
+        {{submitting ? '提交中...' : '创建任务'}}
+      </button>
+    </view>
+  </view>
+</view>

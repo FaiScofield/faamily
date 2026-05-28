@@ -1,0 +1,191 @@
+/* Profile page styles - personal center style */
+.page-profile {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 0 0 120rpx;
+  box-sizing: border-box;
+}
+
+/* ---- Loading ---- */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+/* ---- Card Base ---- */
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  margin: 0 32rpx 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+/* ---- User Card ---- */
+.user-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 32rpx 40rpx;
+  margin-top: 0;
+  border-radius: 0 0 16rpx 16rpx;
+}
+
+.user-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 64rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+  background: #e8f5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #ffffff;
+  font-weight: 700;
+  background: #07c160;
+}
+
+.user-nickname {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+/* ---- VIP Card ---- */
+.vip-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.vip-icon {
+  font-size: 40rpx;
+  margin-right: 12rpx;
+}
+
+.vip-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.vip-body {
+  background: #fffbe6;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+}
+
+.vip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+}
+
+.vip-row:first-child {
+  border-bottom: 2rpx solid #fff3c4;
+}
+
+.vip-label {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.vip-value {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+.vip-level {
+  color: #f9a825;
+  font-weight: 700;
+}
+
+/* ---- Feature List ---- */
+.feature-list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.feature-item:active {
+  background: #f9f9f9;
+}
+
+.feature-item-left {
+  display: flex;
+  align-items: center;
+}
+
+.feature-icon {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+}
+
+.feature-label {
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+.feature-arrow {
+  font-size: 32rpx;
+  color: #cccccc;
+  flex-shrink: 0;
+}
+
+/* ---- Logout ---- */
+.logout-section {
+  margin: 48rpx 32rpx 0;
+}
+
+.btn-logout {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #ef5350;
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 0;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: none;
+}
+
+.btn-logout::after {
+  border: none;
+}
+
+.btn-logout:active {
+  background: #f9f9f9;
+}

@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/home/index",
+    "pages/tasks/index",
+    "pages/task-detail/index",
+    "pages/task-create/index",
+    "pages/family/index",
+    "pages/members/index",
+    "pages/profile/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "家庭管家",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f5f5",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "images/tab/home.png",
+        "selectedIconPath": "images/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/tasks/index",
+        "text": "任务",
+        "iconPath": "images/tab/task.png",
+        "selectedIconPath": "images/tab/task-active.png"
+      },
+      {
+        "pagePath": "pages/family/index",
+        "text": "家庭",
+        "iconPath": "images/tab/family.png",
+        "selectedIconPath": "images/tab/family-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "images/tab/profile.png",
+        "selectedIconPath": "images/tab/profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "requiredPrivateInfos": []
+}

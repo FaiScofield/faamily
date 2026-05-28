@@ -1,0 +1,27 @@
+<!-- Login page: WeChat authorization + brand copy -->
+<view class="page-login">
+  <view class="brand-section">
+    <image class="brand-logo" src="/images/logo.png" mode="aspectFit" />
+    <text class="brand-title">家庭管家</text>
+    <text class="brand-slogan">让家庭事务井井有条</text>
+  </view>
+
+  <view class="button-section">
+    <button
+      class="btn-wechat-login"
+      type="primary"
+      open-type="getUserProfile"
+      bindgetuserprofile="onGetUserProfile"
+      loading="{{isLogging}}"
+      disabled="{{isLogging}}"
+    >
+      {{ isLogging ? '登录中...' : '微信一键登录' }}
+    </button>
+    <text class="agreement-text">
+      登录即表示同意
+      <text class="link">《用户协议》</text>
+      和
+      <text class="link">《隐私政策》</text>
+    </text>
+  </view>
+</view>

@@ -1,0 +1,55 @@
+<!-- Task list page: tab filter + card list -->
+<view class="page-tasks">
+  <!-- Tab bar -->
+  <view class="tab-bar">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="index"
+      class="tab-item {{currentTab === item.key ? 'tab-active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onTabChange"
+    >
+      <text>{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- Loading state -->
+  <view wx:if="{{loading && tasks.length === 0}}" class="loading-container">
+    <loading />
+  </view>
+
+  <!-- Error state -->
+  <view wx:elif="{{!loading && tasks.length === 0}}" class="empty-state">
+    <text>暂无任务</text>
+  </view>
+
+  <!-- Task list -->
+  <view wx:else class="task-list">
+    <view
+      wx:for="{{tasks}}"
+      wx:key="task_id"
+      class="card task-card"
+      data-task-id="{{item.task_id}}"
+      bindtap="goToDetail"
+    >
+      <!-- Title row -->
+      <view class="task-title-row">
+        <view class="priority-dot priority-{{item.priority}}"></view>
+        <text class="task-title">{{item.title}}</text>
+        <text class="tag tag-{{item.status}}">{{statusLabel(item.status)}}</text>
+      </view>
+
+      <!-- Meta row -->
+      <view class="task-meta-row">
+        <view wx:if="{{item.assignee_user_id}}" class="meta-item">
+          <text class="meta-label">指派人：</text>
+          <text class="meta-value">{{memberName(item.assignee_user_id)}}</text>
+        </view>
+        <view wx:if="{{item.due_at}}" class="meta-item">
+          <text class="meta-label">截止：</text>
+          <text class="meta-value">{{item.due_at}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

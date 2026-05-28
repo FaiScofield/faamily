@@ -1,0 +1,99 @@
+/* Task create page styles - form layout */
+.page-task-create {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 120rpx;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.form-container {
+  padding: 16rpx 0;
+}
+
+.form-card {
+  margin: 12rpx 16rpx;
+  padding: 24rpx 28rpx;
+}
+
+/* ---- Form items ---- */
+.form-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--border);
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.form-label {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+
+.form-label.required::before {
+  content: '* ';
+  color: var(--danger);
+}
+
+.form-input {
+  width: 100%;
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 140rpx;
+  padding: 16rpx;
+  font-size: 26rpx;
+  color: var(--text);
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+
+.form-picker {
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  color: var(--text);
+}
+
+.picker-placeholder {
+  color: var(--text-light);
+}
+
+/* ---- Actions ---- */
+.form-actions {
+  margin: 40rpx 16rpx;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 24rpx 0;
+  font-size: 30rpx;
+  font-weight: 500;
+  text-align: center;
+  width: 100%;
+}
+
+.btn-primary:active {
+  background: var(--primary-dark);
+}
+
+.btn-disabled {
+  opacity: 0.6;
+}

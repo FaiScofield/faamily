@@ -1,0 +1,229 @@
+/* Task detail page styles - segmented info display */
+.page-task-detail {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 60rpx;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.detail-content {
+  padding: 16rpx 0;
+}
+
+/* ---- Section header ---- */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ---- Info rows ---- */
+.info-section {
+  margin: 12rpx 16rpx;
+  padding: 24rpx 28rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row-desc {
+  flex-direction: column;
+}
+
+.info-label {
+  width: 140rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.info-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text);
+}
+
+.info-value-desc {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ---- Status actions ---- */
+.actions-section {
+  margin: 12rpx 16rpx;
+  padding: 24rpx 28rpx;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.btn-action {
+  flex: 1;
+  min-width: 160rpx;
+  padding: 20rpx 0;
+  font-size: 26rpx;
+  border-radius: var(--radius);
+  text-align: center;
+  border: 1rpx solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:active {
+  background: var(--primary-dark);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: #fff;
+  border: none;
+}
+
+/* ---- Submit section ---- */
+.submit-section {
+  margin: 12rpx 16rpx;
+  padding: 24rpx 28rpx;
+}
+
+.submit-input {
+  width: 100%;
+  min-height: 120rpx;
+  padding: 16rpx;
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  font-size: 26rpx;
+  box-sizing: border-box;
+  margin-bottom: 20rpx;
+}
+
+/* ---- Submissions ---- */
+.submissions-section {
+  margin: 12rpx 16rpx;
+  padding: 24rpx 28rpx;
+}
+
+.empty-sub-section {
+  padding: 40rpx 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+}
+
+.submission-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.submission-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--border);
+}
+
+.submission-item:last-child {
+  border-bottom: none;
+}
+
+.submission-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.submission-author {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.submission-note {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 8rpx;
+}
+
+.submission-review-note {
+  display: block;
+  font-size: 24rpx;
+  color: var(--warning);
+  margin-bottom: 8rpx;
+}
+
+.submission-time {
+  display: block;
+  font-size: 22rpx;
+  color: var(--text-light);
+}
+
+/* ---- Review buttons ---- */
+.review-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.btn-review {
+  flex: 1;
+  padding: 14rpx 0;
+  font-size: 24rpx;
+  border-radius: var(--radius);
+  text-align: center;
+  border: none;
+}
+
+.btn-review-approve {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-review-reject {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-review-approve:active {
+  background: var(--primary-dark);
+}
+
+.btn-review-reject:active {
+  opacity: 0.8;
+}

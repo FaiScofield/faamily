@@ -1,0 +1,59 @@
+<!-- Profile page: user info, VIP status, feature entries -->
+<view class="page-profile">
+  <!-- Loading state -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <loading />
+  </view>
+
+  <!-- Main content -->
+  <view wx:else class="profile-content">
+    <!-- User Info Section -->
+    <view class="card user-card">
+      <view class="user-avatar">
+        <image
+          wx:if="{{userInfo.avatar_url}}"
+          src="{{userInfo.avatar_url}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="avatar-placeholder">
+          <text>{{userInfo.nickname ? userInfo.nickname.charAt(0).toUpperCase() : '?'}}</text>
+        </view>
+      </view>
+      <text class="user-nickname">{{userInfo.nickname || '未设置昵称'}}</text>
+    </view>
+
+    <!-- VIP Status Card -->
+    <view class="card vip-card">
+      <view class="vip-header">
+        <text class="vip-icon">👑</text>
+        <text class="vip-title">会员状态</text>
+      </view>
+      <view class="vip-body">
+        <view class="vip-row">
+          <text class="vip-label">当前等级</text>
+          <text class="vip-value vip-level">{{vipStatus.level || '普通用户'}}</text>
+        </view>
+        <view class="vip-row">
+          <text class="vip-label">到期时间</text>
+          <text class="vip-value">{{vipStatus.expire_at || '永久有效'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Feature Entries -->
+    <view class="card feature-list">
+      <view class="feature-item" bindtap="goToFamily">
+        <view class="feature-item-left">
+          <text class="feature-icon">🏠</text>
+          <text class="feature-label">我的家庭</text>
+        </view>
+        <text class="feature-arrow">&gt;</text>
+      </view>
+    </view>
+
+    <!-- Logout Button -->
+    <view class="logout-section">
+      <button class="btn-logout" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+</view>

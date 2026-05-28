@@ -1,0 +1,112 @@
+/* Tasks page styles - tab bar + card list */
+.page-tasks {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 120rpx;
+}
+
+/* ---- Tab bar ---- */
+.tab-bar {
+  display: flex;
+  background: var(--card-bg);
+  border-bottom: 1rpx solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.tab-active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background: var(--primary);
+  border-radius: 2rpx;
+}
+
+/* ---- Loading ---- */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+/* ---- Task list ---- */
+.task-list {
+  padding: 16rpx 0;
+}
+
+.task-card {
+  margin: 12rpx 16rpx;
+  padding: 24rpx 28rpx;
+}
+
+.task-title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.priority-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 7rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.priority-0 { background: #e0e0e0; }
+.priority-1 { background: var(--primary); }
+.priority-2 { background: var(--warning); }
+.priority-3 { background: var(--danger); }
+
+.task-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 12rpx;
+}
+
+.task-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-left: 26rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+}
+
+.meta-label {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.meta-value {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}

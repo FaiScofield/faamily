@@ -1,0 +1,274 @@
+/* Family page styles - card layout */
+.page-family {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx 32rpx 120rpx;
+  box-sizing: border-box;
+}
+
+/* ---- Loading ---- */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+/* ---- Card base ---- */
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  margin-bottom: 24rpx;
+}
+
+/* ---- Family Card ---- */
+.family-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.family-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  overflow: hidden;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+  background: #e8f5e9;
+}
+
+.family-avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.family-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.family-name {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.family-role {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.family-stats {
+  display: flex;
+  gap: 32rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 4rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+/* ---- Section Header ---- */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+/* ---- Invite Code ---- */
+.invite-code-box {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background: #f0faf0;
+  border-radius: 12rpx;
+}
+
+.invite-code-label {
+  font-size: 26rpx;
+  color: #666666;
+  margin-right: 12rpx;
+}
+
+.invite-code-value {
+  flex: 1;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #07c160;
+  letter-spacing: 4rpx;
+}
+
+.btn-copy {
+  font-size: 24rpx;
+  color: #07c160;
+  background: transparent;
+  border: 2rpx solid #07c160;
+  border-radius: 8rpx;
+  padding: 8rpx 20rpx;
+  line-height: 1.4;
+}
+
+.btn-copy::after {
+  border: none;
+}
+
+.invite-empty {
+  padding: 12rpx 0;
+}
+
+.invite-empty-text {
+  font-size: 28rpx;
+  color: #bbbbbb;
+}
+
+.btn-invite {
+  font-size: 26rpx;
+  color: #ffffff;
+  background: #07c160;
+  border-radius: 8rpx;
+  padding: 12rpx 24rpx;
+  line-height: 1.4;
+}
+
+.btn-invite::after {
+  border: none;
+}
+
+/* ---- Template Section ---- */
+.btn-init {
+  font-size: 26rpx;
+  color: #ffffff;
+  background: #07c160;
+  border-radius: 8rpx;
+  padding: 12rpx 24rpx;
+  line-height: 1.4;
+}
+
+.btn-init::after {
+  border: none;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.template-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.template-item:last-child {
+  border-bottom: none;
+}
+
+.template-icon {
+  width: 60rpx;
+  height: 60rpx;
+  font-size: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.template-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.template-name {
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: 500;
+  margin-bottom: 4rpx;
+}
+
+.template-desc {
+  font-size: 24rpx;
+  color: #999999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-status {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.tag-enabled {
+  font-size: 22rpx;
+  color: #07c160;
+  background: #e8f5e9;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+}
+
+.tag-disabled {
+  font-size: 22rpx;
+  color: #999999;
+  background: #f5f5f5;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+}
+
+.template-empty,
+.template-empty-text {
+  padding: 8rpx 0;
+  font-size: 28rpx;
+  color: #bbbbbb;
+}
+
+/* ---- Members Entry ---- */
+.members-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 30rpx;
+  color: #333333;
+}
+
+.arrow-icon {
+  font-size: 32rpx;
+  color: #cccccc;
+  flex-shrink: 0;
+}

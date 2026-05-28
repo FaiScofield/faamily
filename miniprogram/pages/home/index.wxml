@@ -1,0 +1,80 @@
+<!-- Home page: family info, quick entries, pending tasks -->
+<view class="page-home">
+  <!-- Loading state -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <loading />
+  </view>
+
+  <!-- Main content -->
+  <view wx:else class="home-content">
+    <!-- Family Card -->
+    <view class="card family-card" bindtap="goToFamily">
+      <view class="family-card-header">
+        <view class="family-avatar">
+          <image
+            src="{{currentFamily.avatar_url || '/images/icon-family.png'}}"
+            mode="aspectFill"
+          />
+        </view>
+        <view class="family-info">
+          <text class="family-name">
+            {{currentFamily ? currentFamily.name : '暂未加入家庭'}}
+          </text>
+          <text class="family-hint">
+            {{currentFamily ? '点击查看家庭成员' : '去创建一个家庭吧'}}
+          </text>
+        </view>
+        <text class="arrow-icon">&gt;</text>
+      </view>
+    </view>
+
+    <!-- Quick Entries -->
+    <view class="quick-entries">
+      <view class="card entry-item" data-type="task" bindtap="goToTasks">
+        <image class="entry-icon" src="/images/tab/task-active.png" mode="aspectFit" />
+        <text class="entry-label">任务</text>
+      </view>
+      <view class="card entry-item" data-type="family" bindtap="goToFamily">
+        <image class="entry-icon" src="/images/tab/family-active.png" mode="aspectFit" />
+        <text class="entry-label">家庭</text>
+      </view>
+      <view class="card entry-item" data-type="document" bindtap="goToDocuments">
+        <image class="entry-icon" src="/images/tab/home-active.png" mode="aspectFit" />
+        <text class="entry-label">文档</text>
+      </view>
+    </view>
+
+    <!-- Pending Tasks Section -->
+    <view class="section-title">
+      <text class="section-title-text">最近待办</text>
+      <text class="section-title-more" bindtap="goToTasks">查看全部 &gt;</text>
+    </view>
+
+    <!-- Empty state -->
+    <view wx:if="{{pendingTasks.length === 0}}" class="card empty-card">
+      <text class="empty-text">暂无待办任务</text>
+    </view>
+
+    <!-- Task List -->
+    <view wx:else class="task-list">
+      <view
+        wx:for="{{pendingTasks}}"
+        wx:key="task_id"
+        class="card task-item"
+        data-task-id="{{item.task_id}}"
+        bindtap="goToTaskDetail"
+      >
+        <view class="task-item-left">
+          <view class="priority-dot priority-{{item.priority}}"></view>
+        </view>
+        <view class="task-item-body">
+          <text class="task-title">{{item.title}}</text>
+          <text wx:if="{{item.due_at}}" class="task-due">
+            截止: {{item.due_at}}
+          </text>
+        </view>
+        <text class="task-status status-{{item.status}}">{{item.status}}</text>
+      </view>
+    </view>
+  </view>
+</view>
