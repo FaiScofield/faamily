@@ -1,7 +1,8 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 SQLAlchemy==2.0.35
-psycopg[binary]==3.2.13
+# 仅 PostgreSQL 需要: pip install psycopg[binary]
+# psycopg[binary]==3.2.13
 pydantic-settings==2.5.2
 alembic==1.13.3
 python-jose[cryptography]==3.3.0
