@@ -1,6 +1,7 @@
 """Pydantic schemas for family-related request/response models."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -74,7 +75,7 @@ class MemberListResponse(BaseModel):
 class MemberRoleUpdateRequest(BaseModel):
     """Request body for updating a member's role."""
 
-    role: str = Field(description="owner | admin | member")
+    role: Literal["owner", "admin", "member"] = Field(description="owner | admin | member")
 
 
 class MemberPermissionsUpdateRequest(BaseModel):

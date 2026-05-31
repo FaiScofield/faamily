@@ -44,12 +44,13 @@ create table if not exists memberships (
   family_id uuid not null references families(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
   role text not null,
+  permissions jsonb not null default '{}'::jsonb,
   status text not null default 'active',
   display_name text null,
   joined_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint chk_memberships_role check (role in ('owner', 'admin', 'member', 'child')),
+  constraint chk_memberships_role check (role in ('owner', 'admin', 'member')),
   constraint chk_memberships_status check (status in ('active', 'pending', 'removed')),
   constraint uq_memberships_family_user unique (family_id, user_id)
 );
@@ -173,10 +174,22 @@ create table if not exists quotas (
   plan text not null default 'free',
   total_bytes bigint not null default 2147483648,
   used_bytes bigint not null default 0,
+  created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint chk_quotas_total_bytes check (total_bytes >= 0),
   constraint chk_quotas_used_bytes check (used_bytes >= 0)
 );
+
+create table if not exists email_verification_otps (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  code_hash text not null,
+  expires_at timestamptz not null,
+  consumed_at timestamptz null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_email_verification_otps_email_expires on email_verification_otps(email, expires_at desc);
 
 create table if not exists vault_email_otps (
   id uuid primary key default gen_random_uuid(),

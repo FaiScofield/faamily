@@ -220,7 +220,7 @@ def update_member_permissions_endpoint(
 ):
     """Update a member's permission flags (owner or admin only).
 
-    Used for child-like restrictions — e.g. {'restricted': true} limits
+    Used for restricted member access — e.g. {'restricted': true} limits
     the member's access to certain family features.
     """
     target_membership = get_membership(db, family_id, user_id)

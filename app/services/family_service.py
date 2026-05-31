@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.models import Family, Invite, Membership, Quota, User
 from app.services.audit_service import write_audit_log
 
+ALLOWED_MEMBER_ROLES = {"owner", "admin", "member"}
+
 
 def generate_invite_code(length: int = 8) -> str:
     """Generate a random alphanumeric invitation code."""
@@ -170,11 +172,14 @@ def update_member_role(
     Args:
         db: Database session.
         membership: Membership to update.
-        new_role: New role (owner/admin/member/child).
+        new_role: New role (owner/admin/member).
 
     Returns:
         Updated Membership object.
     """
+    if new_role not in ALLOWED_MEMBER_ROLES:
+        raise ValueError("Role must be one of: owner, admin, member")
+
     membership.role = new_role
     db.commit()
     db.refresh(membership)

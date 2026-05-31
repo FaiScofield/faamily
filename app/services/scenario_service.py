@@ -6,7 +6,7 @@ baby care, appliance archive) and family-level scenario instances.
 
 from sqlalchemy.orm import Session
 
-from app.models import ScenarioInstance, ScenarioTemplate
+from app.models import Folder, ScenarioInstance, ScenarioTemplate
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +175,38 @@ def get_template_by_key(db: Session, key: str) -> ScenarioTemplate | None:
     return template
 
 
+def ensure_scenario_default_folders(
+    db: Session,
+    family_id: str,
+    template_definition: dict | None,
+) -> None:
+    """Create missing top-level folders declared by a scenario template."""
+    default_folders = (template_definition or {}).get("default_folders", [])
+    for item in default_folders:
+        zone = item.get("zone")
+        name = item.get("name")
+        if not zone or not name:
+            continue
+
+        existing = db.query(Folder).filter(
+            Folder.family_id == family_id,
+            Folder.zone == zone,
+            Folder.parent_id.is_(None),
+            Folder.name == name,
+        ).first()
+        if existing:
+            continue
+
+        db.add(
+            Folder(
+                family_id=family_id,
+                zone=zone,
+                name=name,
+                parent_id=None,
+            )
+        )
+
+
 # ---------------------------------------------------------------------------
 # Scenario Instances (family-level)
 # ---------------------------------------------------------------------------
@@ -200,6 +232,10 @@ def enable_scenario(
     Raises:
         ValueError: If scenario is already enabled for this family.
     """
+    template = get_template(db, template_id)
+    if not template:
+        raise ValueError("Scenario template not found")
+
     existing = db.query(ScenarioInstance).filter(
         ScenarioInstance.family_id == family_id,
         ScenarioInstance.template_id == template_id,
@@ -211,6 +247,7 @@ def enable_scenario(
         # Re-enable disabled instance
         existing.status = "enabled"
         existing.config = config or existing.config
+        ensure_scenario_default_folders(db, family_id, template.definition)
         db.commit()
         db.refresh(existing)
         return existing
@@ -222,6 +259,7 @@ def enable_scenario(
         config=config or {},
     )
     db.add(instance)
+    ensure_scenario_default_folders(db, family_id, template.definition)
     db.commit()
     db.refresh(instance)
     return instance

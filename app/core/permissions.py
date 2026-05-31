@@ -3,7 +3,7 @@
 Provides dependency injectors for FastAPI to enforce:
 - Family membership validation
 - Role-based access control (owner/admin/member)
-- Permission flag checking (e.g. 'restricted' for child-like limits)
+- Permission flag checking (e.g. 'restricted' for limited access)
 """
 
 from fastapi import Depends, HTTPException, status

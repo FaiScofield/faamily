@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -209,7 +210,7 @@ class Membership(TimestampMixin, Base):
         default=dict,
         server_default="{}",
         nullable=False,
-        comment="Flag-based permissions, e.g. {'restricted': true} for child-like limits",
+        comment="Flag-based permissions, e.g. {'restricted': true} for limited access",
     )
     status: Mapped[str] = mapped_column(
         String(20),
@@ -476,11 +477,13 @@ class Folder(TimestampMixin, Base):
 
     __table_args__ = (
         CheckConstraint("zone IN ('shared', 'vault')", name="chk_folders_zone"),
-        UniqueConstraint(
+        Index(
+            "uq_folders_family_zone_parent_name",
             "family_id",
             "zone",
+            "parent_id",
             "name",
-            name="uq_folders_family_zone_parent_name",
+            unique=True,
         ),
         Index("idx_folders_family_zone", "family_id", "zone"),
     )
@@ -527,7 +530,7 @@ class File(TimestampMixin, Base):
     )
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     mime_type: Mapped[str] = mapped_column(Text, nullable=False)
-    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
     storage_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     checksum: Mapped[str | None] = mapped_column(Text, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(
@@ -563,12 +566,48 @@ class Quota(TimestampMixin, Base):
         primary_key=True,
     )
     plan: Mapped[str] = mapped_column(String(20), nullable=False, default="free")
-    total_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=2_147_483_648)
-    used_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, default=2_147_483_648)
+    used_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
 
     __table_args__ = (
         CheckConstraint("total_bytes >= 0", name="chk_quotas_total_bytes"),
         CheckConstraint("used_bytes >= 0", name="chk_quotas_used_bytes"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Account Email OTP
+# ---------------------------------------------------------------------------
+
+
+class EmailVerificationOtp(Base):
+    """One-time password for account email verification."""
+
+    __tablename__ = "email_verification_otps"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        GUID(),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    email: Mapped[str] = mapped_column(Text, nullable=False)
+    code_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    consumed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("idx_email_verification_otps_email_expires", "email", "expires_at"),
     )
 
 

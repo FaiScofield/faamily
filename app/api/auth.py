@@ -11,8 +11,6 @@ Endpoints:
 - GET  /auth/me              — Get current user profile
 """
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -25,7 +23,7 @@ from app.core.security import (
     decode_token,
 )
 from app.db import get_db
-from app.models import User
+from app.models import User, UserIdentity
 from app.schemas import (
     EmailLoginRequest,
     EmailRegisterRequest,
@@ -37,8 +35,8 @@ from app.schemas import (
     WechatLoginRequest,
     WechatLoginResponse,
 )
+from app.services import auth_service
 from app.services.auth_service import (
-    bind_identity_to_user,
     create_anonymous_user,
     get_or_create_user_by_identity,
     hash_password,
@@ -161,76 +159,49 @@ def email_login(request: Request, body: EmailLoginRequest, db: Session = Depends
 
 
 # ---------------------------------------------------------------------------
-# Email Verification (placeholder - requires email sending service)
+# Email Verification
 # ---------------------------------------------------------------------------
 
 
 @router.post("/email/send-otp")
 @limiter.limit("3/minute")
 def email_send_otp(request: Request, body: EmailSendOtpRequest, db: Session = Depends(get_db)):
-    """Request an OTP code for email verification.
+    """Create and send an email verification OTP."""
+    otp_code = auth_service.generate_otp_code()
 
-    TODO: Integrate with an email sending service (e.g. SendGrid, SES).
-    For now, this is a placeholder that generates and stores the OTP hash.
-    """
-    from app.models import VaultEmailOtp
-    from datetime import timedelta
-    import hashlib
-    import secrets
+    try:
+        auth_service.create_email_verification_otp(db, body.email, otp_code)
+        auth_service.send_email_otp(body.email, otp_code)
+        db.commit()
+    except RuntimeError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        )
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to send verification email",
+        )
 
-    # Generate a 6-digit OTP
-    otp_code = f"{secrets.randbelow(1000000):06d}"
-    code_hash = hashlib.sha256(otp_code.encode()).hexdigest()
-
-    otp_record = VaultEmailOtp(
-        user_id=None,  # Will be set when user is known
-        email=body.email,
-        code_hash=code_hash,
-        expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
-    )
-    db.add(otp_record)
-    db.commit()
-
-    # TODO: Send email with OTP code
-    # For development, return the code in response (remove in production!)
-    return {"detail": "OTP sent", "_dev_otp_code": otp_code}
+    return {"detail": "Verification code sent"}
 
 
 @router.post("/email/verify")
 def email_verify(body: EmailVerifyRequest, db: Session = Depends(get_db)):
-    """Verify an email with OTP code."""
-    import hashlib
-    from app.models import VaultEmailOtp
-
-    code_hash = hashlib.sha256(body.code.encode()).hexdigest()
-
-    otp_record = db.query(VaultEmailOtp).filter(
-        VaultEmailOtp.email == body.email,
-        VaultEmailOtp.code_hash == code_hash,
-        VaultEmailOtp.consumed_at.is_(None),
-        VaultEmailOtp.expires_at > datetime.now(timezone.utc),
-    ).first()
-
-    if not otp_record:
+    """Verify an email using a previously sent OTP code."""
+    try:
+        auth_service.verify_email_otp(db, body.email, body.code)
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired OTP code",
+            detail=str(exc),
         )
-
-    # Mark OTP as consumed
-    otp_record.consumed_at = datetime.now(timezone.utc)
-    db.commit()
-
-    # Mark the email identity as verified
-    from app.models import UserIdentity
-
-    identity = db.query(UserIdentity).filter(
-        UserIdentity.type == "email",
-        UserIdentity.identifier == body.email,
-    ).first()
-    if identity:
-        identity.verified_at = datetime.now(timezone.utc)
-        db.commit()
 
     return {"detail": "Email verified successfully"}
 
@@ -243,34 +214,34 @@ def email_verify(body: EmailVerifyRequest, db: Session = Depends(get_db)):
 @router.post("/wechat/login", response_model=WechatLoginResponse)
 @limiter.limit("10/minute")
 def wechat_login(request: Request, body: WechatLoginRequest, db: Session = Depends(get_db)):
-    """Login via WeChat Mini Program.
+    """Login via WeChat Mini Program using the jscode2session API."""
+    try:
+        session_payload = auth_service.exchange_wechat_code_for_session(body.code)
+    except auth_service.WechatConfigError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        )
+    except auth_service.WechatAPIError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"errcode": exc.errcode, "errmsg": exc.errmsg},
+        )
+    except auth_service.WechatUpstreamError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        )
 
-    TODO: Exchange the wx.login code for openid/unionid via WeChat API.
-    For now, this is a placeholder that accepts the code directly as openid.
-    """
-    # TODO: Call WeChat API to exchange code for openid/unionid
-    #   GET https://api.weixin.qq.com/sns/jscode2session
-    #   ?appid={APPID}&secret={SECRET}&js_code={code}&grant_type=authorization_code
-    openid = body.code  # Placeholder: using code as openid directly
-    unionid = None  # TODO: extract from WeChat response
+    openid = session_payload["openid"]
+    unionid = session_payload.get("unionid")
+    identifier = unionid or openid
 
-    # Use unionid as primary identifier if available, otherwise openid
-    identifier = unionid if unionid else openid
-    identity_type = "wechat"
-
-    user, is_new = get_or_create_user_by_identity(
-        db, identity_type, identifier, provider="wechat_miniprogram"
+    user, is_new = auth_service.get_or_create_user_by_wechat_session(
+        db,
+        openid=openid,
+        unionid=unionid,
     )
-
-    # If unionid is available and different from openid, also bind openid
-    if unionid and openid and unionid != openid:
-        try:
-            bind_identity_to_user(
-                db, user, "wechat", openid,
-                provider="wechat_miniprogram_openid",
-            )
-        except ValueError:
-            pass  # Already bound, ignore
 
     # Store nickname/avatar if provided and user is new
     if is_new and (body.nickname or body.avatar_url):

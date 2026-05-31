@@ -39,7 +39,7 @@
 ## E. M2 家庭体系（家庭 / 成员 / 邀请码）
 
 - [x] 创建家庭：创建 `families` 并自动创建 `memberships(role=owner)`
-- [x] 成员管理：列成员、改角色（owner/admin/member/child）、移除成员
+- [x] 成员管理：列成员、改角色（owner/admin/member）、移除成员
 - [x] 邀请码：生成/作废/过期/次数限制，加入家庭校验与 `used_count` 更新
 - [x] 权限中间件：所有 family 资源访问必须校验 membership
 
