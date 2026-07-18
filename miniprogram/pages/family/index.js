@@ -182,8 +182,19 @@ Page({
       })
   },
 
+  goToCreateFamily() {
+    wx.navigateTo({ url: '/pages/family-create/index' })
+  },
+
+  goToJoinFamily() {
+    wx.navigateTo({ url: '/pages/join-family/index' })
+  },
+
   /**
    * Navigates to the members management page.
+   */
+  /**
+   * Navigates to the task-create page.
    */
   goToMembers() {
     wx.navigateTo({ url: '/pages/members/index' })

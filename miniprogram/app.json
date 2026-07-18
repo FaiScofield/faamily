@@ -7,7 +7,9 @@
     "pages/task-create/index",
     "pages/family/index",
     "pages/members/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/family-create/index",
+    "pages/join-family/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",

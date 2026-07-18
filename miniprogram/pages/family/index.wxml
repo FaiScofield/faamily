@@ -7,8 +7,19 @@
 
   <!-- Main content -->
   <view wx:else class="family-content">
+    <!-- No family prompt -->
+    <view wx:if="{{!family}}" class="card empty-card">
+      <view class="empty-row">
+        <text class="empty-text">你还没有加入任何家庭</text>
+      </view>
+      <view class="empty-actions">
+        <button class="btn-outline" bindtap="goToCreateFamily">创建家庭</button>
+        <button class="btn-outline" bindtap="goToJoinFamily">加入家庭</button>
+      </view>
+    </view>
+
     <!-- Family Info Card -->
-    <view class="card family-card">
+    <view wx:else class="card family-card">
       <view class="family-card-header">
         <view class="family-avatar">
           <image

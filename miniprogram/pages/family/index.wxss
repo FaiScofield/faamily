@@ -259,6 +259,37 @@
 }
 
 /* ---- Members Entry ---- */
+.empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 96rpx 32rpx;
+}
+
+.empty-row {
+  margin-bottom: 32rpx;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 24rpx;
+}
+
+.btn-outline {
+  font-size: 28rpx;
+  color: #07c160;
+  background: transparent;
+  border: 2rpx solid #07c160;
+  border-radius: 12rpx;
+  padding: 16rpx 40rpx;
+  line-height: 1.4;
+}
+
+.btn-outline::after {
+  border: none;
+}
+
 .members-entry {
   display: flex;
   align-items: center;

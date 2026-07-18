@@ -1,0 +1,19 @@
+<wxs src="../../utils/filters.wxs" module="filters" />
+<view class="page-family-create">
+  <view class="card form-card">
+    <view class="form-item">
+      <text class="form-label required">家庭名称</text>
+      <input
+        class="form-input"
+        placeholder="给家庭起个名字吧"
+        value="{{familyName}}"
+        bindinput="onNameInput"
+      />
+    </view>
+  </view>
+  <view class="form-actions">
+    <button class="btn-primary {{submitting ? 'btn-disabled' : ''}}" disabled="{{submitting}}" bindtap="onSubmit">
+      {{submitting ? '提交中...' : '创建家庭'}}
+    </button>
+  </view>
+</view>

@@ -1,0 +1,20 @@
+<view class="page-join-family">
+  <view class="card form-card">
+    <view class="form-item">
+      <text class="form-label required">邀请码</text>
+      <input
+        class="form-input"
+        placeholder="请输入8位邀请码"
+        maxlength="20"
+        value="{{inviteCode}}"
+        bindinput="onCodeInput"
+      />
+    </view>
+    <text class="form-hint">向家人索要邀请码，输入后即可加入家庭</text>
+  </view>
+  <view class="form-actions">
+    <button class="btn-primary {{submitting ? 'btn-disabled' : ''}}" disabled="{{submitting}}" bindtap="onSubmit">
+      {{submitting ? '提交中...' : '加入家庭'}}
+    </button>
+  </view>
+</view>

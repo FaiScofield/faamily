@@ -50,8 +50,19 @@
       <text class="section-title-more" bindtap="goToTasks">查看全部 &gt;</text>
     </view>
 
+    <!-- No family state -->
+    <view wx:if="{{!currentFamily}}" class="card empty-card">
+      <view class="empty-row">
+        <text class="empty-text">你还没有加入任何家庭</text>
+      </view>
+      <view class="empty-actions">
+        <button class="btn-outline" bindtap="goToCreateFamily">创建家庭</button>
+        <button class="btn-outline" bindtap="goToJoinFamily">加入家庭</button>
+      </view>
+    </view>
+
     <!-- Empty state -->
-    <view wx:if="{{pendingTasks.length === 0}}" class="card empty-card">
+    <view wx:elif="{{pendingTasks.length === 0}}" class="card empty-card">
       <text class="empty-text">暂无待办任务</text>
     </view>
 

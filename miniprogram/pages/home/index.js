@@ -107,6 +107,14 @@ Page({
     wx.showToast({ title: '文档功能即将上线', icon: 'none' })
   },
 
+  goToCreateFamily() {
+    wx.navigateTo({ url: '/pages/family-create/index' })
+  },
+
+  goToJoinFamily() {
+    wx.navigateTo({ url: '/pages/join-family/index' })
+  },
+
   /**
    * Navigate to the task detail page.
    */
