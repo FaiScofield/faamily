@@ -6,7 +6,7 @@
  *   2. onLoad -> fetchTasks() with current tab status filter
  *   3. onPullDownRefresh -> re-fetch tasks
  */
-import { get } from '../../utils/api'
+import { get, getCurrentFamilyId } from '../../utils/api'
 
 const TABS = [
   { key: 'all', label: '全部' },
@@ -36,6 +36,12 @@ Page({
 
   onPullDownRefresh() {
     this.fetchTasks().finally(() => wx.stopPullDownRefresh())
+  },
+
+  onShow() {
+    if (!this.data.loading) {
+      this.loadMembers().then(() => this.fetchTasks())
+    }
   },
 
   /**
@@ -148,8 +154,5 @@ Page({
   /**
    * Get current family ID from app global data or storage.
    */
-  _getFamilyId() {
-    const app = getApp()
-    return app.globalData.currentFamilyId || wx.getStorageSync('currentFamilyId')
-  },
+  _getFamilyId: getCurrentFamilyId,
 })

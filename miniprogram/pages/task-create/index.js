@@ -5,7 +5,7 @@
  *   1. onLoad -> loadMembers() to populate assignee/reviewer pickers
  *   2. onSubmit -> POST /families/{familyId}/tasks with form data
  */
-import { get, post } from '../../utils/api'
+import { get, post, getCurrentFamilyId } from '../../utils/api'
 
 const PRIORITY_OPTIONS = [
   { label: '无', value: 0 },
@@ -171,8 +171,5 @@ Page({
   /**
    * Get current family ID.
    */
-  _getFamilyId() {
-    const app = getApp()
-    return app.globalData.currentFamilyId || wx.getStorageSync('currentFamilyId')
-  },
+  _getFamilyId: getCurrentFamilyId,
 })

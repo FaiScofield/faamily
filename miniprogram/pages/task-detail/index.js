@@ -8,7 +8,7 @@
  *   4. Submit for review  -> POST /families/{familyId}/tasks/{taskId}/submit
  *   5. Review submission  -> PUT .../submissions/{subId}/review
  */
-import { get, put, post } from '../../utils/api'
+import { get, put, post, getCurrentFamilyId } from '../../utils/api'
 
 Page({
   data: {
@@ -257,8 +257,5 @@ Page({
   /**
    * Get current family ID.
    */
-  _getFamilyId() {
-    const app = getApp()
-    return app.globalData.currentFamilyId || wx.getStorageSync('currentFamilyId')
-  },
+  _getFamilyId: getCurrentFamilyId,
 })

@@ -4,6 +4,16 @@
  */
 import CONFIG from './config'
 
+/** Get current family ID from app global. */
+export function getCurrentFamilyId() {
+  try {
+    var app = getApp()
+    return app.globalData.currentFamilyId || ''
+  } catch (e) {
+    return ''
+  }
+}
+
 // 是否正在刷新 token 的锁，防止并发刷新
 let isRefreshing = false
 let pendingRequests = []
