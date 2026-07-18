@@ -25,6 +25,20 @@ if config.config_file_name is not None:
 # Import all ORM models here so that their metadata is registered
 from app.models import Base  # noqa: E402
 
+# Register SQLite-compatible type compilations for local dev
+from sqlalchemy.dialects.postgresql import UUID as _PG_UUID, JSONB as _PG_JSONB
+from sqlalchemy.ext.compiler import compiles
+
+if settings.database_url.startswith("sqlite"):
+    @compiles(_PG_UUID, "sqlite")
+    def _compile_uuid_sqlite(type_, compiler, **kw):
+        return "VARCHAR(36)"
+
+    @compiles(_PG_JSONB, "sqlite")
+    def _compile_jsonb_sqlite(type_, compiler, **kw):
+        return "JSON"
+
+
 target_metadata = Base.metadata
 
 
