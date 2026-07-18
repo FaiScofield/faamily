@@ -17,6 +17,7 @@ Endpoints:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
@@ -51,9 +52,12 @@ from app.schemas.family import (
 from app.services.family_service import (
     create_family,
     create_invite,
+    create_pending_member,
+    delete_family,
     disable_invite,
     get_family_invites,
     get_invite_by_code,
+    get_family_members,
     get_membership,
     get_user_families,
     is_invite_valid,
@@ -65,6 +69,30 @@ from app.services.family_service import (
 )
 
 router = APIRouter(prefix="/families", tags=["families"])
+
+
+# ---------------------------------------------------------------------------
+# Add pending member schemas
+# ---------------------------------------------------------------------------
+
+
+class AddMemberRequest(BaseModel):
+    display_name: str = Field(min_length=1, max_length=50)
+    role: str = Field(default="member")
+
+
+class AddMemberResponse(BaseModel):
+    membership_id: str
+    display_name: str
+    role: str
+    status: str
+
+    model_config = {"from_attributes": True}
+
+    @field_validator("membership_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 # ---------------------------------------------------------------------------
@@ -150,6 +178,22 @@ def delete_family_endpoint(
 # ---------------------------------------------------------------------------
 # Membership Management
 # ---------------------------------------------------------------------------
+
+
+@router.post("/{family_id}/members/add", response_model=AddMemberResponse, status_code=status.HTTP_201_CREATED)
+def add_family_member(
+    family_id: str,
+    body: AddMemberRequest,
+    membership: Membership = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    member = create_pending_member(
+        db=db,
+        family_id=family_id,
+        display_name=body.display_name,
+        role=body.role,
+    )
+    return member
 
 
 @router.get("/{family_id}/members", response_model=MemberListResponse)

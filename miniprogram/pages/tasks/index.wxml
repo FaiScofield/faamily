@@ -1,6 +1,5 @@
-<!-- Task list page: tab filter + card list -->
+<wxs src="../../utils/filters.wxs" module="filters" />
 <view class="page-tasks">
-  <!-- Tab bar -->
   <view class="tab-bar">
     <view
       wx:for="{{tabs}}"
@@ -12,18 +11,12 @@
       <text>{{item.label}}</text>
     </view>
   </view>
-
-  <!-- Loading state -->
   <view wx:if="{{loading && tasks.length === 0}}" class="loading-container">
     <loading />
   </view>
-
-  <!-- Error state -->
   <view wx:elif="{{!loading && tasks.length === 0}}" class="empty-state">
     <text>暂无任务</text>
   </view>
-
-  <!-- Task list -->
   <view wx:else class="task-list">
     <view
       wx:for="{{tasks}}"
@@ -32,14 +25,11 @@
       data-task-id="{{item.task_id}}"
       bindtap="goToDetail"
     >
-      <!-- Title row -->
       <view class="task-title-row">
         <view class="priority-dot priority-{{item.priority}}"></view>
         <text class="task-title">{{item.title}}</text>
-          <text class="tag tag-{{item.status}}">{{filters.statusLabel(item.status)}}</text>
+        <text class="tag tag-{{item.status}}">{{filters.statusLabel(item.status)}}</text>
       </view>
-
-      <!-- Meta row -->
       <view class="task-meta-row">
         <view wx:if="{{item.assignee_user_id}}" class="meta-item">
           <text class="meta-label">指派人：</text>
@@ -52,5 +42,7 @@
       </view>
     </view>
   </view>
+  <view wx:if="{{!loading}}" class="fab-create" bindtap="goToCreate">
+    <text class="fab-icon">+</text>
+  </view>
 </view>
-<wxs src="../../utils/filters.wxs" module="filters" />

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ class TaskStatusUpdateRequest(BaseModel):
 class TaskResponse(BaseModel):
     """Task data returned by API."""
 
-    task_id: str
+    task_id: str = Field(validation_alias="id")
     family_id: str
     title: str
     description: str | None
@@ -58,6 +58,11 @@ class TaskResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("task_id", "family_id", "created_by_user_id", "assignee_user_id", "reviewer_user_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 class TaskListResponse(BaseModel):
@@ -89,7 +94,7 @@ class SubmissionReviewRequest(BaseModel):
 class SubmissionResponse(BaseModel):
     """Submission data returned by API."""
 
-    submission_id: str
+    submission_id: str = Field(validation_alias="id")
     task_id: str
     submitted_by_user_id: str
     note: str | None

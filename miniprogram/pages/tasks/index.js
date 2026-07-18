@@ -151,6 +151,10 @@ Page({
     return map[status] || status
   },
 
+  goToCreate() {
+    wx.navigateTo({ url: '/pages/task-create/index' })
+  },
+
   /**
    * Get current family ID from app global data or storage.
    */

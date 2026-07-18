@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AnnouncementCreateRequest(BaseModel):
@@ -25,7 +25,7 @@ class AnnouncementUpdateRequest(BaseModel):
 class AnnouncementResponse(BaseModel):
     """Announcement data returned by API."""
 
-    announcement_id: str
+    announcement_id: str = Field(validation_alias="id")
     family_id: str
     title: str
     content: str
@@ -35,6 +35,11 @@ class AnnouncementResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("announcement_id", "family_id", "created_by_user_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 class AnnouncementListResponse(BaseModel):

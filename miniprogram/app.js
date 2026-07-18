@@ -1,7 +1,7 @@
 /**
  * 家庭管家 - 小程序入口
  */
-import { post, saveTokens, clearTokens } from './utils/api'
+import { get, post, saveTokens, clearTokens } from './utils/api'
 
 App({
   globalData: {
@@ -20,7 +20,7 @@ App({
 
   /** 获取当前用户信息 */
   getUserInfo() {
-    return post('/auth/me')
+    return get('/auth/me')
       .then((res) => {
         // Normalize: backend returns user_id, but pages expect id
         if (res.user_id && !res.id) {

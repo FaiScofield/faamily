@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -28,7 +28,7 @@ class FolderUpdateRequest(BaseModel):
 class FolderResponse(BaseModel):
     """Folder data returned by API."""
 
-    folder_id: str
+    folder_id: str = Field(validation_alias="id")
     family_id: str
     zone: str
     name: str
@@ -37,6 +37,11 @@ class FolderResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("folder_id", "family_id", "parent_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v) if v else None
 
 
 class FolderListResponse(BaseModel):
@@ -68,7 +73,7 @@ class FileUploadRequest(BaseModel):
 class FileResponse(BaseModel):
     """File metadata returned by API."""
 
-    file_id: str
+    file_id: str = Field(validation_alias="id")
     family_id: str
     zone: str
     folder_id: str | None
@@ -82,6 +87,11 @@ class FileResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("file_id", "family_id", "folder_id", "uploader_user_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v) if v else None
 
 
 class FileListResponse(BaseModel):

@@ -106,6 +106,28 @@
   color: var(--text-light);
 }
 
+.fab-create {
+  position: fixed;
+  right: 48rpx;
+  bottom: 160rpx;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6rpx 20rpx rgba(7, 193, 96, 0.3);
+  z-index: 100;
+}
+
+.fab-icon {
+  font-size: 52rpx;
+  color: #ffffff;
+  font-weight: 300;
+  line-height: 1;
+}
+
 .meta-value {
   font-size: 24rpx;
   color: var(--text-secondary);

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -28,7 +28,7 @@ class FamilyUpdateRequest(BaseModel):
 class FamilyResponse(BaseModel):
     """Family data returned by API."""
 
-    family_id: str
+    family_id: str = Field(validation_alias="id")
     name: str
     avatar_url: str | None
     owner_user_id: str
@@ -36,6 +36,11 @@ class FamilyResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("family_id", "owner_user_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 class FamilyListResponse(BaseModel):
@@ -52,7 +57,7 @@ class FamilyListResponse(BaseModel):
 class MemberResponse(BaseModel):
     """Member data returned by API."""
 
-    membership_id: str
+    membership_id: str = Field(validation_alias="id")
     user_id: str
     role: str = Field(description="owner | admin | member")
     permissions: dict = Field(
@@ -64,6 +69,11 @@ class MemberResponse(BaseModel):
     joined_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("membership_id", "user_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 class MemberListResponse(BaseModel):
@@ -106,7 +116,7 @@ class InviteCreateRequest(BaseModel):
 class InviteResponse(BaseModel):
     """Invitation code data returned by API."""
 
-    invite_id: str
+    invite_id: str = Field(validation_alias="id")
     code: str
     expires_at: datetime
     max_uses: int
@@ -116,6 +126,11 @@ class InviteResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("invite_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 class InviteListResponse(BaseModel):

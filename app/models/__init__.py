@@ -107,7 +107,7 @@ class UserIdentity(TimestampMixin, Base):
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -164,7 +164,7 @@ class Family(TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    owner_user_id: Mapped[uuid.UUID] = mapped_column(
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -195,10 +195,10 @@ class Membership(TimestampMixin, Base):
         ForeignKey("families.id", ondelete="CASCADE"),
         nullable=False,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
     role: Mapped[str] = mapped_column(
         String(20),
@@ -266,7 +266,7 @@ class Invite(TimestampMixin, Base):
     max_uses: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     used_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     need_approval: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_by_user_id: Mapped[uuid.UUID] = mapped_column(
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -309,7 +309,7 @@ class Announcement(TimestampMixin, Base):
     title: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_by_user_id: Mapped[uuid.UUID] = mapped_column(
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -350,7 +350,7 @@ class Task(TimestampMixin, Base):
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_by_user_id: Mapped[uuid.UUID] = mapped_column(
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -417,7 +417,7 @@ class TaskSubmission(TimestampMixin, Base):
         ForeignKey("tasks.id", ondelete="CASCADE"),
         nullable=False,
     )
-    submitted_by_user_id: Mapped[uuid.UUID] = mapped_column(
+    submitted_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -523,7 +523,7 @@ class File(TimestampMixin, Base):
         GUID(),
         nullable=True,
     )
-    uploader_user_id: Mapped[uuid.UUID] = mapped_column(
+    uploader_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -626,7 +626,7 @@ class VaultEmailOtp(TimestampMixin, Base):
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -657,7 +657,7 @@ class VaultSession(TimestampMixin, Base):
         primary_key=True,
         default=uuid.uuid4,
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -780,7 +780,7 @@ class AuditLog(Base):
         ForeignKey("families.id", ondelete="CASCADE"),
         nullable=False,
     )
-    actor_user_id: Mapped[uuid.UUID] = mapped_column(
+    actor_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id"),
         nullable=False,
@@ -823,7 +823,7 @@ class VipSubscription(Base):
 
     __tablename__ = "vip_subscriptions"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,

@@ -100,6 +100,38 @@ Page({
    * Opens role picker for non-owner/non-admin members (as per spec: owner/admin
    * can only be modified through the family setup page).
    */
+  onSubmitAdd() {
+    var name = (this.data.addMemberName || '').trim()
+    if (!name) { wx.showToast({ title: 'input name', icon: 'none' }); return }
+    var app = getApp()
+    var familyId = app.globalData.currentFamilyId
+    if (!familyId) { wx.showToast({ title: 'no family', icon: 'none' }); return }
+
+    wx.showLoading({ title: 'adding...' })
+    post('/families/' + familyId + '/members/add', { display_name: name, role: 'member' })
+      .then(function() {
+        wx.showToast({ title: 'added', icon: 'success' })
+        this.setData({ showAddForm: false, addMemberName: '' })
+        this.fetchMembers(familyId)
+      }.bind(this))
+      .catch(function(err) {
+        wx.showToast({ title: err.message || 'failed', icon: 'none' })
+      })
+      .finally(function() { wx.hideLoading() })
+  },
+
+  onShowAddForm() {
+    this.setData({ showAddForm: true, addMemberName: '' })
+  },
+
+  onCancelAdd() {
+    this.setData({ showAddForm: false, addMemberName: '' })
+  },
+
+  onAddNameInput(e) {
+    this.setData({ addMemberName: e.detail.value })
+  },
+
   onMemberTap(e) {
     const memberId = e.currentTarget.dataset.memberId
         const member = this.data.members.find((m) => m.membership_id === memberId)

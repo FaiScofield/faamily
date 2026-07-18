@@ -146,6 +146,36 @@ def delete_family(db: Session, family: Family) -> None:
 # ---------------------------------------------------------------------------
 
 
+def create_pending_member(
+    db: Session,
+    family_id: str,
+    display_name: str,
+    role: str = "member",
+) -> Membership:
+    """Create a pending membership for a family member before they join.
+
+    Args:
+        db: Database session.
+        family_id: UUID of the family.
+        display_name: Display name for the member.
+        role: Initial role (default: member).
+
+    Returns:
+        The newly created Membership object.
+    """
+    membership = Membership(
+        family_id=family_id,
+        user_id=None,
+        role=role,
+        status="pending",
+        display_name=display_name,
+    )
+    db.add(membership)
+    db.commit()
+    db.refresh(membership)
+    return membership
+
+
 def get_family_members(db: Session, family_id: str) -> list[Membership]:
     """Get all active members of a family."""
     return db.query(Membership).filter(

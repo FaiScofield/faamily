@@ -19,7 +19,12 @@
           <text>{{userInfo.nickname ? userInfo.nickname.charAt(0).toUpperCase() : '?'}}</text>
         </view>
       </view>
-      <text class="user-nickname">{{userInfo.nickname || '未设置昵称'}}</text>
+      <text wx:if="{{!editingNickname}}" class="user-nickname">{{userInfo.nickname || '未设置昵称'}}</text>
+      <text wx:if="{{!editingNickname}}" class="edit-hint" bindtap="onEditNickname">编辑</text>
+      <view wx:if="{{editingNickname}}" class="nickname-edit">
+        <input class="nickname-input" placeholder="输入昵称" value="{{userInfo.nickname || ''}}" bindinput="onNicknameInput" focus="{{true}}" />
+        <button class="btn-save-nickname" bindtap="onSaveNickname">保存</button>
+      </view>
     </view>
 
     <!-- VIP Status Card -->

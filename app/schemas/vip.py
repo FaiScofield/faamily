@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class VipSubscribeRequest(BaseModel):
@@ -17,13 +17,18 @@ class VipSubscribeRequest(BaseModel):
 class VipResponse(BaseModel):
     """VIP subscription data returned by API."""
 
-    user_id: str
+    user_id: str = Field(validation_alias="user_id")
     tier: str
     started_at: datetime
     expires_at: datetime | None
     auto_renew: bool
 
     model_config = {"from_attributes": True}
+
+    @field_validator("user_id", mode="before")
+    @classmethod
+    def _uuid_to_str(cls, v):
+        return str(v)
 
 
 class VipTierInfo(BaseModel):

@@ -144,6 +144,7 @@ function request(url, options = {}) {
 }
 
 /** GET 请求 */
+/** GET 璇锋眰 */
 export function get(url, params) {
   return request(url, { method: 'GET', data: params })
 }

@@ -16,6 +16,7 @@ Page({
     userInfo: null,
     /** VIP status object */
     vipStatus: null,
+    editingNickname: false,
   },
 
   onShow() {
@@ -76,6 +77,22 @@ Page({
   /**
    * Logs out the current user: clears tokens and jumps to the login page.
    */
+  onEditNickname() {
+    this.setData({ editingNickname: true })
+  },
+
+  onNicknameInput(e) {
+    var info = this.data.userInfo || {}
+    info.nickname = e.detail.value
+    this.setData({ userInfo: info })
+  },
+
+  onSaveNickname() {
+    wx.setStorageSync('user_info', this.data.userInfo)
+    this.setData({ editingNickname: false })
+    wx.showToast({ title: 'saved', icon: 'success' })
+  },
+
   logout() {
     wx.showModal({
       title: '提示',

@@ -10,12 +10,17 @@
     <button
       class="btn-wechat-login"
       type="primary"
-      open-type="getUserProfile"
-      bindgetuserprofile="onGetUserProfile"
+      bindtap="onLogin"
       loading="{{isLogging}}"
       disabled="{{isLogging}}"
     >
       {{ isLogging ? '登录中...' : '微信一键登录' }}
+    </button>
+    <button
+      class="btn-guest-login"
+      bindtap="onGuestLogin"
+    >
+      游客体验
     </button>
     <text class="agreement-text">
       登录即表示同意

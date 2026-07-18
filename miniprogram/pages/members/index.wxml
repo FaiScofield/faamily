@@ -43,6 +43,21 @@
       <text class="empty-text">暂无家庭成员</text>
     </view>
 
+    <!-- Add Member Form -->
+    <view class="card add-member-card">
+      <view class="section-header">
+        <text class="section-title">添加成员</text>
+        <button wx:if="{{!showAddForm}}" class="btn-add" bindtap="onShowAddForm">+ 添加</button>
+      </view>
+      <view wx:if="{{showAddForm}}" class="add-form">
+        <input class="add-input" placeholder="成员姓名（如：爸爸、妈妈）" value="{{addMemberName}}" bindinput="onAddNameInput" />
+        <view class="add-actions">
+          <button class="btn-outline" bindtap="onCancelAdd">取消</button>
+          <button class="btn-primary btn-sm" bindtap="onSubmitAdd">添加</button>
+        </view>
+      </view>
+    </view>
+
     <!-- Invite Code Entry -->
     <view class="card invite-entry" bindtap="goToFamily">
       <view class="invite-entry-inner">
