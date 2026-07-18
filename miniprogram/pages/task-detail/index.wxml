@@ -126,7 +126,7 @@
           <text class="submission-time">{{filters.formatDateTime(item.created_at)}}</text>
 
           <!-- Review buttons for the reviewer -->
-          <view wx:if="{{isReviewer && item.status === 'pending'}}" class="review-actions">
+          <view wx:if="{{isReviewer && item.status === 'submitted'}}" class="review-actions">
             <button
               class="btn-review btn-review-approve"
               data-sub-id="{{item.submission_id}}"

@@ -12,6 +12,7 @@ const TABS = [
   { key: 'all', label: '全部' },
   { key: 'pending', label: '待办' },
   { key: 'in_progress', label: '进行中' },
+  { key: 'submitted', label: '待审核' },
   { key: 'done', label: '已完成' },
 ]
 
@@ -76,6 +77,7 @@ Page({
     const tab = this.data.currentTab
 
     if (tab === 'done') {
+      // done tab: show both done and rejected as terminal states
       params.status = 'done'
     } else if (tab !== 'all') {
       params.status = tab
@@ -85,12 +87,14 @@ Page({
       .then((res) => {
         let tasks = res.tasks || []
 
-        // For the "done" tab, also include "rejected" tasks
+        // For "done" tab, fetch rejected tasks in parallel
         if (tab === 'done') {
-          params.status = 'rejected'
-          return get(`/families/${familyId}/tasks`, params).then((res2) => {
+          return get(`/families/${familyId}/tasks`, { status: 'rejected' }).then((res2) => {
             const rejectedTasks = res2.tasks || []
-            tasks = tasks.concat(rejectedTasks)
+            // Merge and sort by updated_at descending
+            tasks = tasks.concat(rejectedTasks).sort(function(a, b) {
+              return (b.updated_at || b.created_at) > (a.updated_at || a.created_at) ? 1 : -1
+            })
             this.setData({ tasks })
           })
         }

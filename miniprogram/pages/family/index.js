@@ -55,17 +55,40 @@ Page({
       // Fetch family detail, invites, and templates in parallel
       return Promise.all([
         get(`/families/${fid}`),
+        get(`/families/${fid}/members`),
         get(`/families/${fid}/invites`),
-        this.loadTemplates(fid),
+        get('/scenarios/templates'),
+        get(`/families/${fid}/scenarios`),
       ])
-        .then(([familyData, inviteData]) => {
+        .then(([familyData, membersData, inviteData, templatesData, scenariosData]) => {
           const family = familyData.family || familyData
+          const members = membersData.members || []
+          const invites = inviteData.invites || []
+          const templates = templatesData.templates || []
+          const scenarios = scenariosData.scenarios || []
+
+          const currentUserId = (wx.getStorageSync('user_info') || {}).id || ''
+          const myMember = members.find(m => m.user_id === currentUserId)
+          const myRole = myMember ? myMember.role : ''
+
+          const activeTemplateIds = {}
+          scenarios.forEach(s => { if (s.status === 'enabled') activeTemplateIds[s.template_id] = true })
+
+          const mergedTemplates = templates.map(t => ({
+            template_id: t.template_id,
+            key: t.key,
+            name: t.name,
+            description: t.definition ? t.definition.description : '',
+            is_enabled: !!activeTemplateIds[t.template_id],
+          }))
+
           this.setData({
             family,
-            roleLabel: this.getRoleLabel(family.my_role),
-            memberCount: family.member_count || 0,
-            activeTemplateCount: family.active_template_count || 0,
-            inviteCode: inviteData.code || inviteData.invite_code || '',
+            roleLabel: this.getRoleLabel(myRole),
+            memberCount: members.length,
+            activeTemplateCount: Object.keys(activeTemplateIds).length,
+            inviteCode: invites.length > 0 ? invites[0].code : '',
+            templates: mergedTemplates,
           })
         })
         .catch(() => {
@@ -96,21 +119,6 @@ Page({
       .catch(() => {
         wx.showToast({ title: '家庭信息加载失败', icon: 'none' })
         this.setData({ loading: false })
-      })
-  },
-
-  /**
-   * Loads scenario templates for the current family.
-   */
-  loadTemplates(familyId) {
-    return get(`/families/${familyId}/templates`)
-      .then((res) => {
-        const templates = res.templates || []
-        const activeCount = templates.filter((t) => t.is_enabled).length
-        this.setData({ templates, activeTemplateCount: activeCount })
-      })
-      .catch(() => {
-        this.setData({ templates: [], activeTemplateCount: 0 })
       })
   },
 
@@ -164,12 +172,7 @@ Page({
     post('/scenarios/templates/seed')
       .then(() => {
         wx.showToast({ title: '初始化成功', icon: 'success' })
-        // Reload templates
-        const app = getApp()
-        const familyId = app.globalData.currentFamilyId
-        if (familyId) {
-          return this.loadTemplates(familyId)
-        }
+        this.loadFamilyData()
       })
       .catch(() => {
         wx.showToast({ title: '初始化失败', icon: 'none' })

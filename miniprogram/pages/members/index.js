@@ -8,7 +8,7 @@
  *
  * Note: owner and admin role changes must go through the family setup page.
  */
-import { get, post } from '../../utils/api'
+import { get, put, post } from '../../utils/api'
 
 Page({
   data: {
@@ -130,7 +130,7 @@ Page({
     if (!familyId || !selectedMemberId) return
 
     wx.showLoading({ title: '修改中...' })
-    post(`/families/${familyId}/members/${selectedMemberId}/role`, { role: newRole })
+    put(`/families/${familyId}/members/${selectedMemberId}/role`, { role: newRole })
       .then(() => {
         wx.showToast({ title: '角色已更新', icon: 'success' })
         this.setData({ showRolePicker: false, selectedMemberId: null })
