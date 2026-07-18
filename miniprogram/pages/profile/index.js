@@ -51,7 +51,7 @@ Page({
 
         this.setData({
           userInfo: user,
-          vipStatus: vip.status || vip,
+          vipStatus: vip,  // backend /vip/status returns tier directly
         })
       })
       .catch(() => {

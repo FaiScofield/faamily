@@ -36,7 +36,7 @@
       <view class="task-title-row">
         <view class="priority-dot priority-{{item.priority}}"></view>
         <text class="task-title">{{item.title}}</text>
-        <text class="tag tag-{{item.status}}">{{statusLabel(item.status)}}</text>
+          <text class="tag tag-{{item.status}}">{{filters.statusLabel(item.status)}}</text>
       </view>
 
       <!-- Meta row -->
@@ -47,9 +47,10 @@
         </view>
         <view wx:if="{{item.due_at}}" class="meta-item">
           <text class="meta-label">截止：</text>
-          <text class="meta-value">{{item.due_at}}</text>
+          <text class="meta-value">{{filters.formatDate(item.due_at)}}</text>
         </view>
       </view>
     </view>
   </view>
 </view>
+<wxs src="../../utils/filters.wxs" module="filters" />

@@ -35,12 +35,12 @@
 
       <view class="info-row">
         <text class="info-label">状态</text>
-        <text class="info-value">{{statusLabel(task.status)}}</text>
+        <text class="info-value">{{filters.statusLabel(task.status)}}</text>
       </view>
 
       <view wx:if="{{task.due_at}}" class="info-row">
         <text class="info-label">截止日期</text>
-        <text class="info-value">{{task.due_at}}</text>
+        <text class="info-value">{{filters.formatDate(task.due_at)}}</text>
       </view>
 
       <view class="info-row">
@@ -60,7 +60,7 @@
 
       <view class="info-row">
         <text class="info-label">创建时间</text>
-        <text class="info-value">{{task.created_at}}</text>
+        <text class="info-value">{{filters.formatDateTime(task.created_at)}}</text>
       </view>
     </view>
 
@@ -123,7 +123,7 @@
           <text wx:if="{{item.review_note}}" class="submission-review-note">
             审核意见：{{item.review_note}}
           </text>
-          <text class="submission-time">{{item.created_at}}</text>
+          <text class="submission-time">{{filters.formatDateTime(item.created_at)}}</text>
 
           <!-- Review buttons for the reviewer -->
           <view wx:if="{{isReviewer && item.status === 'pending'}}" class="review-actions">
@@ -149,3 +149,4 @@
     </view>
   </view>
 </view>
+<wxs src="../../utils/filters.wxs" module="filters" />

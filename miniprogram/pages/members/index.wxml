@@ -20,14 +20,14 @@
         <view class="member-avatar">
           <image wx:if="{{item.avatar_url}}" src="{{item.avatar_url}}" mode="aspectFill" />
           <view wx:else class="avatar-placeholder" style="background: {{item.color || '#07c160'}};">
-            <text>{{item.nickname ? item.nickname.charAt(0).toUpperCase() : '?'}}</text>
+          <text>{{item.display_name ? item.display_name.charAt(0).toUpperCase() : '?'}}</text>
           </view>
         </view>
 
         <!-- Member info -->
         <view class="member-info">
           <view class="member-name-row">
-            <text class="member-name">{{item.nickname || item.name || '未知用户'}}</text>
+        <text class="member-name">{{item.display_name || item.name || '未知用户'}}</text>
             <text class="member-tag tag-{{item.role}}">{{roleLabel(item.role)}}</text>
           </view>
           <view wx:if="{{item.email || item.permissions}}" class="member-perms">

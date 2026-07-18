@@ -43,7 +43,7 @@ Page({
 
     // Get current user ID from stored user info
     const userInfo = wx.getStorageSync('user_info') || {}
-    this.setData({ currentUserId: userInfo.id || '' })
+    this.setData({ currentUserId: userInfo.id || userInfo.user_id || '' })
 
     this.loadMembers().then(() => {
       this.fetchTask(taskId)

@@ -102,7 +102,7 @@ Page({
    */
   onMemberTap(e) {
     const memberId = e.currentTarget.dataset.memberId
-    const member = this.data.members.find((m) => m.member_id === memberId)
+        const member = this.data.members.find((m) => m.membership_id === memberId)
     if (!member) return
 
     // owner and admin roles can only be changed via family setup page

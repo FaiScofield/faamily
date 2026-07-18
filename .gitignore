@@ -6,6 +6,9 @@ __pycache__/
 .ruff_cache/
 .idea/
 .vscode/
+.code-review-graph/
 .DS_Store
 .env
 *.log
+# Added by code-review-graph
+.code-review-graph/

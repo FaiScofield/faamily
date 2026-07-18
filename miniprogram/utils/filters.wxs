@@ -1,0 +1,28 @@
+var formatDate = function(isoStr) {
+  if (!isoStr) return ''
+  return isoStr.substring(0, 10)
+}
+
+var formatDateTime = function(isoStr) {
+  if (!isoStr) return ''
+  var parts = isoStr.split('T')
+  if (parts.length < 2) return parts[0]
+  return parts[0] + ' ' + parts[1].substring(0, 5)
+}
+
+var statusLabel = function(status) {
+  var map = {
+    pending: '待办',
+    in_progress: '进行中',
+    submitted: '已提交',
+    done: '已完成',
+    rejected: '已驳回',
+  }
+  return map[status] || status
+}
+
+module.exports = {
+  formatDate: formatDate,
+  formatDateTime: formatDateTime,
+  statusLabel: statusLabel,
+}

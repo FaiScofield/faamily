@@ -22,6 +22,10 @@ App({
   getUserInfo() {
     return post('/auth/me')
       .then((res) => {
+        // Normalize: backend returns user_id, but pages expect id
+        if (res.user_id && !res.id) {
+          res.id = res.user_id
+        }
         this.globalData.userInfo = res
         wx.setStorageSync('user_info', res)
         return res

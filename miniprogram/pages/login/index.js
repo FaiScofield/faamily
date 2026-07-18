@@ -61,11 +61,14 @@ Page({
         // Persist access & refresh tokens
         saveTokens(res.access_token, res.refresh_token)
 
-        // Cache user info
-        wx.setStorageSync('user_info', {
+        // Cache user info with normalized id
+        const cachedInfo = {
+          id: res.user_id,
+          user_id: res.user_id,
           nickname: userInfo.nickName,
           avatar_url: userInfo.avatarUrl,
-        })
+        }
+        wx.setStorageSync('user_info', cachedInfo)
 
         // Update app global state
         const app = getApp()

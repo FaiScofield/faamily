@@ -70,7 +70,7 @@
         <view class="task-item-body">
           <text class="task-title">{{item.title}}</text>
           <text wx:if="{{item.due_at}}" class="task-due">
-            截止: {{item.due_at}}
+            截止: {{filters.formatDate(item.due_at)}}
           </text>
         </view>
         <text class="task-status status-{{item.status}}">{{item.status}}</text>
@@ -78,3 +78,4 @@
     </view>
   </view>
 </view>
+<wxs src="../../utils/filters.wxs" module="filters" />
