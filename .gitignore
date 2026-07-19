@@ -10,5 +10,9 @@ __pycache__/
 .DS_Store
 .env
 *.log
+# Local SQLite database (dev baseline)
+data.db
+data.db-shm
+data.db-wal
 # Added by code-review-graph
 .code-review-graph/

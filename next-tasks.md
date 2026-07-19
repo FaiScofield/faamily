@@ -14,11 +14,11 @@
 
 ## B. 本地可运行（开发环境基线）
 
-- [ ] 启动 PostgreSQL（docker compose）
-- [ ] 创建 Python 虚拟环境并安装依赖（requirements.txt）
-- [ ] 配置 `.env`（从 `.env.example` 复制）
-- [ ] 初始化数据库（执行 `alembic upgrade head`）
-- [ ] 启动 API 服务并通过 `/health` 验证
+- [ ] 启动 PostgreSQL（docker compose） — 本环境未安装 docker/psql，已用 SQLite 走通基线；生产/集成环境需补齐
+- [x] 创建 Python 虚拟环境并安装依赖（requirements.txt） — SQLAlchemy 升至 2.0.51 以兼容 Python 3.14
+- [x] 配置 `.env`（从 `.env.example` 复制）
+- [x] 初始化数据库（执行 `alembic upgrade head`） — 当前 head: `0002_email_otp_schema_fix`
+- [x] 启动 API 服务并通过 `/health` 验证 — 返回 `{"status":"ok","env":"local"}`，`/openapi.json` 正常
 
 ## C. 数据库与迁移体系（避免后期返工）
 
