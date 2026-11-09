@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 同一分支的新推送取消旧任务
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------
+  # 1. 密钥扫描 —— 拦截误提交的凭据
+  # ---------------------------------------------------------------
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装 detect-secrets
+        run: pip install detect-secrets==1.5.0
+
+      - name: 检查是否有新增密钥
+        run: |
+          # detect-secrets-hook 直接接收文件列表，并与已审查的基线比对：
+          # 退出码 0 = 无新增密钥，1 = 发现基线之外的新密钥
+          FILES=$(git ls-files | grep -v '^\.secrets\.baseline$')
+          if detect-secrets-hook --baseline .secrets.baseline $FILES; then
+            echo "✅ 未检测到新增密钥"
+          else
+            echo "❌ 检测到新增密钥。请确认："
+            echo "   - 若为真实凭据：先在小程序后台/对应平台轮换该密钥，再提交"
+            echo "   - 若为误报：执行 detect-secrets --baseline .secrets.baseline 更新基线"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------
+  # 2. 代码质量 —— ruff lint + 格式检查
+  # ---------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff==0.8.4
+
+      - name: ruff check
+        run: ruff check app/ tests/ migrations/
+
+      - name: ruff format --check
+        run: ruff format --check app/ tests/ migrations/
+        continue-on-error: true
+
+  # ---------------------------------------------------------------
+  # 3. 测试 —— pytest（SQLite 内存库，无需外部服务）
+  # ---------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: 运行测试
+        env:
+          DATABASE_URL: sqlite://
+          JWT_SECRET: ci-test-secret
+        run: pytest tests -v --tb=short
+
+  # ---------------------------------------------------------------
+  # 4. 应用自检 —— 确认 FastAPI 应用可正常装配
+  # ---------------------------------------------------------------
+  app-smoke:
+    name: App Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 验证应用可加载且路由完整
+        env:
+          DATABASE_URL: sqlite://
+          JWT_SECRET: ci-test-secret
+        run: |
+          python - <<'PY'
+          from app.main import app
+          routes = [r for r in app.routes if hasattr(r, "methods")]
+          v1 = [r for r in routes if r.path.startswith("/v1")]
+          print(f"总路由数: {len(routes)}")
+          print(f"/v1 业务端点: {len(v1)}")
+          assert len(v1) >= 60, "业务端点数量异常"
+          assert any(r.path == "/health" for r in routes), "缺少 /health"
+          print("✅ 应用装配正常")
+          PY

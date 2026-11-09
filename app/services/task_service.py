@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.models import Task, TaskSubmission, User
 
-
 # ---------------------------------------------------------------------------
 # Valid status transitions
 # ---------------------------------------------------------------------------

@@ -5,11 +5,12 @@ timestamptz columns (created_at / updated_at).
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -18,7 +19,6 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    CheckConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB

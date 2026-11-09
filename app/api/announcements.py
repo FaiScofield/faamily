@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.core.permissions import require_admin, require_any_role
 from app.db import get_db
-from app.models import Announcement, Membership, User
+from app.models import Membership, User
 from app.schemas.announcement import (
     AnnouncementCreateRequest,
     AnnouncementListResponse,

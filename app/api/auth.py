@@ -82,11 +82,7 @@ def email_register(request: Request, body: EmailRegisterRequest, db: Session = D
     The email identity is created but not verified until the user
     completes the OTP verification flow.
     """
-    from app.services.auth_service import get_or_create_user_by_identity
-
     # Check if email is already registered
-    from app.models import UserIdentity
-
     existing = db.query(UserIdentity).filter(
         UserIdentity.type == "email",
         UserIdentity.identifier == body.email,
@@ -127,8 +123,6 @@ def email_register(request: Request, body: EmailRegisterRequest, db: Session = D
 @limiter.limit("10/minute")
 def email_login(request: Request, body: EmailLoginRequest, db: Session = Depends(get_db)):
     """Authenticate with email and password."""
-    from app.models import UserIdentity
-
     identity = db.query(UserIdentity).filter(
         UserIdentity.type == "email",
         UserIdentity.identifier == body.email,
@@ -178,7 +172,7 @@ def email_send_otp(request: Request, body: EmailSendOtpRequest, db: Session = De
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
-        )
+        ) from exc
     except HTTPException:
         db.rollback()
         raise
@@ -187,7 +181,7 @@ def email_send_otp(request: Request, body: EmailSendOtpRequest, db: Session = De
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Failed to send verification email",
-        )
+        ) from None
 
     return {"detail": "Verification code sent"}
 
@@ -201,7 +195,7 @@ def email_verify(body: EmailVerifyRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
-        )
+        ) from exc
 
     return {"detail": "Email verified successfully"}
 
@@ -221,17 +215,17 @@ def wechat_login(request: Request, body: WechatLoginRequest, db: Session = Depen
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
-        )
+        ) from exc
     except auth_service.WechatAPIError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"errcode": exc.errcode, "errmsg": exc.errmsg},
-        )
+        ) from exc
     except auth_service.WechatUpstreamError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(exc),
-        )
+        ) from exc
 
     openid = session_payload["openid"]
     unionid = session_payload.get("unionid")
@@ -285,7 +279,7 @@ def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
-        )
+        ) from None
 
     if payload.get("type") != "refresh":
         raise HTTPException(

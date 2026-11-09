@@ -1,0 +1,45 @@
+[project]
+name = "faamily-backend"
+version = "0.7.0"
+description = "Family Butler (家庭管家) backend — FastAPI + PostgreSQL"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+    ".venv",
+    "venv",
+    "migrations/versions",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+# 选一组高信噪比的规则：够用，且不会让 pre-commit 变成拦路虎
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "W",    # pycodestyle warnings
+]
+ignore = [
+    "E501",   # 行长由 formatter 处理
+    "B008",   # FastAPI 的 Depends() 在默认值里是标准写法
+    "UP038",  # isinstance 元组写法尚可读
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试与迁移脚本需要在导入前设置环境变量/改写 sys.path，E402 是刻意为之
+"tests/*" = ["E402"]
+"migrations/env.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]

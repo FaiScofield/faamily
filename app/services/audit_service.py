@@ -5,12 +5,10 @@ file deletion, etc.) into the audit_logs table for compliance
 and accountability.
 """
 
-from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from app.models import AuditLog
-
 
 # Actions that should be audited
 AUDIT_ACTIONS = {

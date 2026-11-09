@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.core.permissions import require_admin, require_any_role
 from app.db import get_db
-from app.models import Membership, ScenarioInstance, ScenarioTemplate, User
+from app.models import Membership, User
 from app.services.scenario_service import (
     disable_scenario,
     enable_scenario,
@@ -127,7 +127,7 @@ def enable_scenario_endpoint(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from e
 
     return {
         "instance_id": str(instance.id),

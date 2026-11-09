@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.core.permissions import require_admin, require_any_role
 from app.db import get_db
-from app.models import Membership, Task, TaskSubmission, User
+from app.models import Membership, TaskSubmission, User
 from app.schemas.task import (
     SubmissionCreateRequest,
     SubmissionListResponse,
@@ -37,7 +37,6 @@ from app.services.task_service import (
     create_task,
     get_task,
     get_task_submissions,
-    is_valid_transition,
     list_tasks,
     review_submission,
     soft_delete_task,
@@ -221,7 +220,7 @@ def update_task_status(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
     return task
 
@@ -348,6 +347,6 @@ def review_task_submission(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
     return submission

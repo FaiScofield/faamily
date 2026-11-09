@@ -1,19 +1,51 @@
+# --- Python ---
 .venv/
+venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
+
+# --- IDE / OS ---
 .idea/
 .vscode/
+.DS_Store
+Thumbs.db
+
+# --- 工具产物 ---
 .code-review-graph/
 .workbuddy/
-.DS_Store
-.env
 *.log
-# Local SQLite database (dev baseline)
+
+# --- 环境变量与密钥 ---
+# .env 及其变体一律不入库；.env.example 是无密模板，需要入库，故显式放行
+.env
+.env.*
+!.env.example
+*.env
+# 兜底：任何形如 *.env.<something> 的本地覆盖文件
+*.env.local
+*.env.production
+*.env.development
+
+# --- 私钥与证书 ---
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# --- 本地数据库（SQLite 开发基线）---
 data.db
 data.db-shm
 data.db-wal
-# Added by code-review-graph
-.code-review-graph/
+*.sqlite
+*.sqlite3
+
+# --- 部署与构建产物 ---
+docker-compose.override.yml
+*.tar.gz

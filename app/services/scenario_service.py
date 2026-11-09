@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from app.models import Folder, ScenarioInstance, ScenarioTemplate
 
-
 # ---------------------------------------------------------------------------
 # Predefined Templates (seeded via migration or API)
 # ---------------------------------------------------------------------------
@@ -164,7 +163,6 @@ def get_template(db: Session, template_id: str) -> ScenarioTemplate | None:
 
 def get_template_by_key(db: Session, key: str) -> ScenarioTemplate | None:
     """Get the latest version of a template by key."""
-    from sqlalchemy import func
 
     template = (
         db.query(ScenarioTemplate)

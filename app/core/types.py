@@ -81,7 +81,6 @@ def configure_engine(engine: Engine) -> None:
 def _register_sqlite_compiles():
     """Register SQLAlchemy type compilation rules for SQLite."""
     from sqlalchemy.ext.compiler import compiles
-    from sqlalchemy.dialects.postgresql import JSONB
 
     @compiles(PG_JSONB, "sqlite")
     def _compile_jsonb_sqlite(type_, compiler, **kw):

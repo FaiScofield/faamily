@@ -83,7 +83,7 @@ def create_new_folder(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from e
 
     return folder
 
@@ -192,7 +192,7 @@ def register_file_upload(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
     return file
 

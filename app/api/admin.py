@@ -15,8 +15,8 @@ Endpoints:
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.core.deps import require_admin_user
 from app.core.config import settings
+from app.core.deps import require_admin_user
 from app.db import get_db
 from app.models import User
 from app.services.admin_service import (

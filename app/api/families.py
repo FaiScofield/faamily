@@ -45,7 +45,6 @@ from app.schemas.family import (
     JoinByInviteResponse,
     MemberListResponse,
     MemberPermissionsUpdateRequest,
-    MemberRemoveRequest,
     MemberResponse,
     MemberRoleUpdateRequest,
 )
@@ -56,8 +55,8 @@ from app.services.family_service import (
     delete_family,
     disable_invite,
     get_family_invites,
-    get_invite_by_code,
     get_family_members,
+    get_invite_by_code,
     get_membership,
     get_user_families,
     is_invite_valid,
@@ -423,7 +422,7 @@ def join_family_endpoint(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from e
 
     return JoinByInviteResponse(
         family_id=str(invite.family_id),

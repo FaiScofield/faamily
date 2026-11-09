@@ -23,11 +23,13 @@ if config.config_file_name is not None:
 
 # MetaData target for 'autogenerate' support
 # Import all ORM models here so that their metadata is registered
-from app.models import Base  # noqa: E402
+from sqlalchemy.dialects.postgresql import JSONB as _PG_JSONB
 
 # Register SQLite-compatible type compilations for local dev
-from sqlalchemy.dialects.postgresql import UUID as _PG_UUID, JSONB as _PG_JSONB
+from sqlalchemy.dialects.postgresql import UUID as _PG_UUID
 from sqlalchemy.ext.compiler import compiles
+
+from app.models import Base  # noqa: E402
 
 if settings.database_url.startswith("sqlite"):
     @compiles(_PG_UUID, "sqlite")

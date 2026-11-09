@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.models import File, Folder, Quota, VaultEmailOtp, VaultSession
 from app.services.audit_service import write_audit_log
 
-
 # ---------------------------------------------------------------------------
 # Folder
 # ---------------------------------------------------------------------------

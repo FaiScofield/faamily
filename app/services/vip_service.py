@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.models import User, VipSubscription
 
-
 # VIP tier definitions
 VIP_TIERS = {
     "free": {

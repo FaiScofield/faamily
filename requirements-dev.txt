@@ -1,0 +1,11 @@
+# 开发/测试依赖（在运行时依赖基础上追加）
+-r requirements.txt
+
+# 测试
+pytest==8.3.4
+
+# 代码质量
+ruff==0.8.4
+
+# 密钥扫描（配合 .githooks/pre-commit 与 CI 使用）
+detect-secrets==1.5.0
