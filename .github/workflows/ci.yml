@@ -34,13 +34,14 @@ jobs:
         run: |
           # detect-secrets-hook 直接接收文件列表，并与已审查的基线比对：
           # 退出码 0 = 无新增密钥，1 = 发现基线之外的新密钥
+          # 注意：必须排除基线文件自身，否则其中的哈希会被当成新密钥而自我放大
           FILES=$(git ls-files | grep -v '^\.secrets\.baseline$')
           if detect-secrets-hook --baseline .secrets.baseline $FILES; then
             echo "✅ 未检测到新增密钥"
           else
             echo "❌ 检测到新增密钥。请确认："
             echo "   - 若为真实凭据：先在小程序后台/对应平台轮换该密钥，再提交"
-            echo "   - 若为误报：执行 detect-secrets --baseline .secrets.baseline 更新基线"
+            echo "   - 若为误报：本地执行 ./scripts/update-secrets-baseline.sh 更新基线"
             exit 1
           fi
 
