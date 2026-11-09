@@ -282,6 +282,7 @@ requirements.txt         运行时依赖
 requirements-dev.txt     开发依赖（pytest / ruff / detect-secrets）
 .githooks/pre-commit     本地密钥扫描钩子（core.hooksPath 指向此处）
 .secrets.baseline        已审查的密钥误报指纹库
+scripts/update-secrets-baseline.sh  安全重建基线（只扫 git 追踪文件）
 .github/workflows/ci.yml CI（secret-scan / lint / test / app-smoke）
 ```
 
@@ -371,6 +372,8 @@ git config core.hooksPath .githooks   # 一次性启用
 3. 发现基线之外的新密钥 → **中止提交**
 
 > 注：Windows 上 `pre-commit` 框架依赖 POSIX shell，本项目改用自研的 Python 钩子，原生可用、无额外依赖。
+>
+> 扫描时会**排除基线文件自身** —— 否则基线里的哈希指纹会被当成新密钥，造成误报循环。
 
 **第 3 道 —— CI**（`.github/workflows/ci.yml`）
 
@@ -383,11 +386,15 @@ git config core.hooksPath .githooks   # 一次性启用
 
 ### 误报处理
 
-基线里的 10 条均为已知误报（URL 中的 `user:pass@`、测试用 `test-secret`、文档示例）。若新增扫描项是误报：
+基线里的 11 条均为已知误报（URL 中的 `user:pass@`、测试用 `test-secret`、文档示例）。若新增扫描项是误报，**用脚本更新基线**：
 
 ```bash
-detect-secrets --baseline .secrets.baseline    # 交互式确认后更新基线
+bash scripts/update-secrets-baseline.sh          # Windows Git Bash 亦可
 ```
+
+> ⚠️ **不要手动执行 `detect-secrets scan --all-files`** —— 它会遍历整个工作目录，把 `.venv/` 里第三方库的数千条指纹写进基线；而基线本身存的是 40 位 hex 哈希，下次扫描基线文件时又会被当成新密钥，**形成自我放大的误报循环，阻断一切提交**。
+>
+> 脚本只扫描 `git ls-files` 的受控文件，并会校验产物不含 `.venv/`、缓存目录。
 
 若**是真密钥**：先到对应平台轮换该凭据，再更新基线。顺序不能反 —— 先轮换，再登记。
 
