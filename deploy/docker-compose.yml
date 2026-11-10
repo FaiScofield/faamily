@@ -120,8 +120,17 @@ services:
     depends_on:
       - backend
     ports:
-      # Host port 8080 -> container 80. Put the tunnel/reverse proxy here.
-      - "${HTTP_PORT:-8080}:80"
+      # Host port 8080 -> container 80.
+      #
+      # LAN-only usage (family members on the same WiFi): no tunnel needed.
+      #   http://<nas-lan-ip>:8080/
+      # The web UI and the API share this origin, so the browser sees a
+      # same-origin request — no CORS, no mixed-content, no local-network
+      # permission prompt.
+      #
+      # To also reach it from outside the home network, point an HTTPS
+      # tunnel (cpolar / frp / Cloudflare Tunnel) at this port.
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8080}:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       # Web UI build output. Two options:
