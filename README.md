@@ -10,7 +10,7 @@
 | 前端 | 原生微信小程序（10 个页面，4 个 tab） |
 | 规模 | 63 个 `/v1` 端点 · 18 张表 · 后端 ~7.6k 行 / 小程序 ~4.1k 行 |
 | 质量 | ruff · pytest（18 用例）· detect-secrets 密钥扫描 · GitHub Actions CI |
-| 版本 | API `0.7.0` · 迁移 head `0002_email_otp_schema_fix` |
+| 版本 | API `0.7.0` · 迁移 head `0003_vault_otp_attempts` |
 
 ---
 
@@ -192,9 +192,25 @@ pending ──→ in_progress ──→ submitted ──→ done
 | PUT/DELETE | `.../documents/folders/{folder_id}` | 重命名 / 删除 |
 | POST/GET | `.../documents/files` | 登记文件元数据（≤ 20MB）/ 查询 |
 | DELETE | `.../documents/files/{file_id}` | 删除（软删 + 释放配额） |
-| POST | `.../documents/vault/otp` | 申请保险箱验证码（**邮件发送待接入，当前调试期明文返回**） |
-| POST | `.../documents/vault/verify` | 校验 OTP → 换取短时 `vault_session` |
+| POST | `.../documents/vault/otp` | 申请保险箱验证码（限流 3/min，发邮件） |
+| POST | `.../documents/vault/verify` | 校验 OTP → 换取短时 `vault_session`（限流 10/min） |
 | GET | `.../documents/vault/status` | 查询保险箱会话状态 |
+
+**保险箱的二次验证机制**（2026-11-10 修复）：
+
+```
+POST /vault/otp  →  邮件送达已验证邮箱  →  POST /vault/verify  →  vault_session
+   （不返回验证码）      6 位码，10 分钟有效，最多错 5 次      30 分钟有效
+```
+
+四道防线：
+
+1. **验证码只发往用户自己已绑定且已验证的邮箱** —— 不能指向任意地址，避免被当作邮箱探测器
+2. **响应体不含验证码** —— 走 SMTP 真实投递；SMTP 未配置时返回 503，而不是把码回传给前端
+3. **失败次数受限** —— 同一验证码连续错 5 次即作废，须重新申请（`vault_email_otps.attempts`）
+4. **vault 资源强制校验 session** —— 带 `zone=vault` 的列表/创建/修改/删除一律要求有效 `vault_session`；**不传 `zone` 时 vault 分区被整体排除**，无法靠省略参数绕过
+
+> ⚠️ 保险箱的邮件投递依赖 SMTP 配置（`SMTP_*`）。未配置时 `/vault/otp` 返回 503 —— 这是有意的，避免退化成"不验证就放行"。
 
 ### 5.6 场景 `/scenarios` · `/families/{id}/scenarios`
 
@@ -224,6 +240,25 @@ users ──┬── user_identities   (wechat / phone / email 多身份绑定)
 18 张表：`users`、`user_identities`、`families`、`memberships`、`invites`、`tasks`、`task_submissions`、`announcements`、`folders`、`files`、`quotas`、`email_verification_otps`、`vault_email_otps`、`vault_sessions`、`scenario_templates`、`scenario_instances`、`audit_logs`、`vip_subscriptions`
 
 统一约定：UUID 主键、`created_at` / `updated_at` 带时区、软删除字段 `deleted_at`、关键表建复合索引（`family_id + 维度`）。
+
+`db/schema.sql` 与 ORM 保持同步，由 `scripts/check_schema_sync.py` 自动校验（CI 中执行），避免两边漂移。
+
+### 保险箱的会话模型
+
+```
+vault_email_otps        vault_sessions
+├─ user_id              ├─ user_id + family_id
+├─ email                ├─ issued_at / expires_at
+├─ code_hash (sha256)   └─ revoked_at
+├─ expires_at
+├─ consumed_at          请求 OTP → 邮件送达 → 校验通过 → 建 session
+└─ attempts (≤5)                  ↓
+                          30 分钟内可访问 vault 分区
+```
+
+- 验证码**只存哈希**，不存明文
+- `attempts` 记录失败次数，达上限即作废该验证码
+- `vault_session` 按 `user_id + family_id` 维度签发，过期或撤销即失效
 
 ### 权限模型
 
@@ -268,7 +303,7 @@ app/
     ├── deps.py          get_current_user / require_admin_user
     ├── permissions.py   角色与权限判定
     └── types.py         跨数据库类型兼容层（GUID / JSONB）
-migrations/versions/     Alembic 迁移（0001_init → 0002_email_otp_schema_fix）
+migrations/versions/     Alembic 迁移（0001_init → 0002_email_otp_schema_fix → 0003_vault_otp_attempts）
 miniprogram/             微信小程序（10 页面 + utils/api.js 请求封装）
 tests/                   pytest（api/ + services/ 两层）
 db/schema.sql            PostgreSQL 裸 DDL
@@ -283,6 +318,7 @@ requirements-dev.txt     开发依赖（pytest / ruff / detect-secrets）
 .githooks/pre-commit     本地密钥扫描钩子（core.hooksPath 指向此处）
 .secrets.baseline        已审查的密钥误报指纹库
 scripts/update-secrets-baseline.sh  安全重建基线（只扫 git 追踪文件）
+scripts/check_schema_sync.py       schema.sql ↔ ORM 一致性校验（CI 中执行）
 .github/workflows/ci.yml CI（secret-scan / lint / test / app-smoke）
 ```
 
@@ -308,18 +344,20 @@ scripts/update-secrets-baseline.sh  安全重建基线（只扫 git 追踪文件
 ```bash
 pip install -r requirements-dev.txt   # pytest / ruff / detect-secrets
 
-pytest tests -q                       # 18 个用例
+pytest tests -q                       # 35 个用例
+python scripts/check_schema_sync.py    # schema.sql ↔ ORM 一致性
 ruff check app/ tests/ migrations/    # 代码规范
 ```
 
-当前 18 个用例，覆盖：
+当前 35 个用例，覆盖：
 
 - 邮箱 OTP —— 发送成功语义、验证码校验通过/拒绝、identity 标记已验证
 - 微信登录 —— 配置缺失返回 503、微信错误码、上游失败 502、unionid 优先绑定、openid 用户复用
 - 成员角色 —— 拒绝遗留的 `child` 角色值
 - 场景模板 —— 启用时幂等创建默认文件夹
+- **保险箱（17 个用例）** —— 验证码不回传响应体、SMTP 缺失返回 503、邮箱归属校验、失败次数上限、旧码作废、vault 资源需 session、省略 `zone` 时 vault 被排除、过期 session 不放行、共享分区不受影响、vault 目录禁止夹带文件、验证码只存哈希
 
-**尚未覆盖**：任务状态机全路径、保险箱 session 生命周期、配额并发扣减、邀请码加入流程。
+**尚未覆盖**：任务状态机全路径、配额并发扣减、邀请码加入流程。
 
 代码规范由 `pyproject.toml` 中的 ruff 配置统一约定（行宽 100、`E/F/I/UP/B/W` 规则集），本地 pre-commit 与 CI 共用同一套判定。
 
@@ -329,15 +367,15 @@ ruff check app/ tests/ migrations/    # 代码规范
 
 按优先级排列，都是动手前值得知道的：
 
-1. **保险箱 OTP 没有真正发邮件，且把验证码明文返回给前端** —— `app/api/documents.py:265` 的 `# TODO: Send email with OTP code` 尚未实现，响应体里带着 `_dev_otp_code` 字段直接回传验证码（注释里写着 "Remove in production!"）。这意味着**保险箱的"二次验证"目前形同虚设**，任何人拿到 token 就能读保险箱。上线前必须接上邮件发送并删掉该字段。对比之下，账号邮箱验证码（`auth_service.send_email_otp`）是走 SMTP 真发的。
-2. **Git 历史中仍残留已泄漏的旧 AppSecret** —— 旧 secret（属于另一个 appid `wx243081c7506dddfd`）已在 GitHub 公开仓库的历史提交里。密钥本身已轮换失效，但历史尚未清理。清理方式见第 11 节。
-3. **`db/schema.sql` 已落后于 ORM** —— 缺 `users.region`、`users.last_activity_at` 两列和整张 `vip_subscriptions` 表，且 `memberships.user_id` 的可空性与 ORM 不一致。以 Alembic 迁移为准，`schema.sql` 需要同步。
-4. **公告附件是"半实现"** —— 创建时校验了 ≤ 5 个附件 ID，但关联文件的逻辑还是 TODO（`app/api/announcements.py:63`），附件实际上没有挂到公告上。
-5. **任务附件未接入** —— `SubmissionCreateRequest.attachment_ids` 字段定义了，但 `submit_task` 端点只取了 `body.note` 传给 service，附件 ID 被丢弃。
-6. **对象存储直传未接入** —— `files.storage_key` 字段已在，`create_file` 逻辑已在，但真实的上传链路和签名 URL 下发都还没有；`storage_key` 目前由客户端传入，没有服务端校验。
-7. **限流只覆盖了 `/auth`** —— 邀请码 join、验证码等敏感接口在 `next-tasks.md` 里列为已完成，但代码里 `limiter.limit` 只出现在 `app/api/auth.py`，其余接口未加限流。
-8. **Dockerfile 缺失** —— 部署脚手架还没做（CI 已有）。
-9. **`setup.bat` 用 `venv/`、文档用 `.venv/`** —— 两者都能用，但别混着敲命令。
+1. **Git 历史中仍残留已泄漏的旧 AppSecret** —— 旧 secret（属于另一个 appid `wx243081c7506dddfd`）已在 GitHub 公开仓库的历史提交里。密钥本身已轮换失效，但历史尚未清理。清理方式见第 11 节。
+2. **公告附件是"半实现"** —— 创建时校验了 ≤ 5 个附件 ID，但关联文件的逻辑还是 TODO（`app/api/announcements.py`），附件实际上没有挂到公告上。
+3. **任务附件未接入** —— `SubmissionCreateRequest.attachment_ids` 字段定义了，但 `submit_task` 端点只取了 `body.note` 传给 service，附件 ID 被丢弃。
+4. **对象存储直传未接入** —— `files.storage_key` 字段已在，`create_file` 逻辑已在，但真实的上传链路和签名 URL 下发都还没有；`storage_key` 目前由客户端传入，没有服务端校验。
+5. **限流只覆盖了 `/auth` 与保险箱** —— 邀请码 join、验证码等敏感接口在 `next-tasks.md` 里列为已完成，但代码里 `limiter.limit` 只出现在 `app/api/auth.py` 与 `app/api/documents.py`，其余接口未加限流。
+6. **Dockerfile 缺失** —— 部署脚手架还没做（CI 已有）。
+7. **`setup.bat` 用 `venv/`、文档用 `.venv/`** —— 两者都能用，但别混着敲命令。
+
+> ✅ 已修复（2026-11-10）：保险箱 OTP 明文回传验证码、vault 资源缺少 session 校验、`db/schema.sql` 落后于 ORM。详见第 5.5 节与第 6 节。
 
 ---
 

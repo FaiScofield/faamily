@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models import File, Folder, Quota, VaultEmailOtp, VaultSession
+from app.models import File, Folder, Quota, UserIdentity, VaultEmailOtp, VaultSession
 from app.services.audit_service import write_audit_log
 
 # ---------------------------------------------------------------------------
@@ -251,6 +251,33 @@ def hash_otp(otp: str) -> str:
     return hashlib.sha256(otp.encode()).hexdigest()
 
 
+def get_verified_email(db: Session, user_id: str, email: str) -> str | None:
+    """Check whether an email is a verified identity bound to the user.
+
+    Vault OTPs may only be sent to an email the user has already bound and
+    verified. This prevents an attacker from pointing verification at an
+    address they do not control, and prevents using the vault as an oracle
+    for whether some other address exists.
+
+    Args:
+        db: Database session.
+        user_id: UUID of the user.
+        email: Email address to check (case-insensitive).
+
+    Returns:
+        The normalized email if it is a verified identity of the user,
+        otherwise None.
+    """
+    normalized = email.strip().lower()
+    identity = db.query(UserIdentity).filter(
+        UserIdentity.user_id == user_id,
+        UserIdentity.type == "email",
+        UserIdentity.identifier == normalized,
+        UserIdentity.verified_at.isnot(None),
+    ).first()
+    return normalized if identity else None
+
+
 def create_vault_otp(
     db: Session,
     user_id: str,
@@ -258,6 +285,13 @@ def create_vault_otp(
     expires_in_minutes: int = 10,
 ) -> str:
     """Create a new vault access OTP.
+
+    The plaintext code is returned so the caller can deliver it over a
+    trusted channel (email). It must never be sent back to the client in the
+    API response.
+
+    Any previously issued, unconsumed OTPs for the same user are invalidated
+    so only the most recent code is usable.
 
     Args:
         db: Database session.
@@ -271,6 +305,12 @@ def create_vault_otp(
     otp_code = generate_otp()
     otp_hash = hash_otp(otp_code)
 
+    # Invalidate any outstanding OTPs for this user
+    db.query(VaultEmailOtp).filter(
+        VaultEmailOtp.user_id == user_id,
+        VaultEmailOtp.consumed_at.is_(None),
+    ).update({"consumed_at": datetime.now(timezone.utc)})
+
     otp_record = VaultEmailOtp(
         user_id=user_id,
         email=email,
@@ -283,6 +323,10 @@ def create_vault_otp(
     return otp_code
 
 
+MAX_OTP_ATTEMPTS = 5
+"""Maximum failed verification attempts before a vault OTP is invalidated."""
+
+
 def verify_vault_otp(
     db: Session,
     user_id: str,
@@ -290,6 +334,11 @@ def verify_vault_otp(
     otp_code: str,
 ) -> bool:
     """Verify a vault access OTP.
+
+    Failed attempts are counted against the outstanding OTP. Once
+    MAX_OTP_ATTEMPTS is reached the code is invalidated and the user must
+    request a new one — this bounds brute-force attempts against a 6-digit
+    code.
 
     Args:
         db: Database session.
@@ -301,20 +350,34 @@ def verify_vault_otp(
         True if OTP is valid and not expired.
     """
     otp_hash = hash_otp(otp_code)
+    now = datetime.now(timezone.utc)
 
     otp_record = db.query(VaultEmailOtp).filter(
         VaultEmailOtp.user_id == user_id,
         VaultEmailOtp.email == email,
-        VaultEmailOtp.code_hash == otp_hash,
         VaultEmailOtp.consumed_at.is_(None),
-        VaultEmailOtp.expires_at > datetime.now(timezone.utc),
-    ).first()
+        VaultEmailOtp.expires_at > now,
+    ).order_by(VaultEmailOtp.created_at.desc()).first()
 
     if not otp_record:
         return False
 
+    # Too many failed attempts — invalidate this code
+    if otp_record.attempts >= MAX_OTP_ATTEMPTS:
+        otp_record.consumed_at = now
+        db.commit()
+        return False
+
+    if otp_record.code_hash != otp_hash:
+        # Count the failure against the outstanding OTP
+        otp_record.attempts += 1
+        if otp_record.attempts >= MAX_OTP_ATTEMPTS:
+            otp_record.consumed_at = now
+        db.commit()
+        return False
+
     # Mark as consumed
-    otp_record.consumed_at = datetime.now(timezone.utc)
+    otp_record.consumed_at = now
     db.commit()
 
     return True

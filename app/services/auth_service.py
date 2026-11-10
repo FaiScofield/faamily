@@ -296,14 +296,30 @@ def create_email_verification_otp(
 
 def send_email_otp(recipient: str, code: str) -> None:
     """Send an email verification OTP through the configured SMTP server."""
+    send_otp_email(
+        recipient=recipient,
+        code=code,
+        subject="Faamily verification code",
+        body=f"Your Faamily verification code is: {code}",
+    )
+
+
+def send_otp_email(recipient: str, code: str, subject: str, body: str) -> None:
+    """Send a one-time code to an email address via the configured SMTP server.
+
+    Shared by account email verification and vault access verification.
+
+    Raises:
+        RuntimeError: If SMTP is not configured.
+    """
     if not settings.smtp_host or not settings.smtp_from_email:
         raise RuntimeError("SMTP is not configured")
 
     message = EmailMessage()
-    message["Subject"] = "Faamily verification code"
+    message["Subject"] = subject
     message["From"] = settings.smtp_from_email
     message["To"] = recipient
-    message.set_content(f"Your Faamily verification code is: {code}")
+    message.set_content(f"{body}\n\nCode: {code}\n\nIf you did not request this code, ignore this email.")
 
     if settings.smtp_use_ssl:
         with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port) as client:

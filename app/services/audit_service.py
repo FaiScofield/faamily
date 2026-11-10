@@ -26,6 +26,7 @@ AUDIT_ACTIONS = {
     "family.deleted",
     # Vault
     "vault.otp_requested",
+    "vault.otp_failed",
     "vault.otp_verified",
     "vault.session_created",
     "vault.session_revoked",

@@ -131,6 +131,72 @@ require_admin = FamilyPermissionChecker("owner", "admin")
 require_any_role = FamilyPermissionChecker("owner", "admin", "member")
 
 
+class VaultAccessDenied(HTTPException):
+    """Raised when a vault resource is accessed without a valid vault session."""
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vault access requires a verified session. Please request and verify an OTP first.",
+        )
+
+
+def assert_vault_session(db: Session, user_id: str, family_id: str) -> None:
+    """Assert the user holds a valid vault session for the family.
+
+    Pure helper — no FastAPI dependency wiring. Call it directly when the
+    check is conditional (e.g. only for the vault zone).
+
+    Args:
+        db: Database session.
+        user_id: UUID of the user.
+        family_id: UUID of the family.
+
+    Raises:
+        VaultAccessDenied: If there is no valid vault session.
+    """
+    from app.services.document_service import get_valid_vault_session
+
+    session = get_valid_vault_session(
+        db=db,
+        user_id=user_id,
+        family_id=family_id,
+    )
+    if not session:
+        raise VaultAccessDenied()
+
+
+def require_vault_session(
+    family_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """FastAPI dependency: require a valid (non-expired) vault session.
+
+    Use this for endpoints that are entirely vault-scoped. For endpoints
+    where only part of the behaviour is vault-scoped, call
+    `assert_vault_session` directly instead.
+
+    Args:
+        family_id: UUID string of the family.
+        current_user: Authenticated user from JWT.
+        db: Database session.
+
+    Returns:
+        The valid VaultSession object.
+    """
+    from app.services.document_service import get_valid_vault_session
+
+    session = get_valid_vault_session(
+        db=db,
+        user_id=str(current_user.id),
+        family_id=family_id,
+    )
+    if not session:
+        raise VaultAccessDenied()
+    return session
+
+
 def has_permission(membership: Membership, flag: str) -> bool:
     """Check if a member has a specific permission flag set.
 

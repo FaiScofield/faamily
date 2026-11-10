@@ -5,11 +5,15 @@ create extension if not exists pgcrypto;
 create table if not exists users (
   id uuid primary key default gen_random_uuid(),
   status smallint not null default 0,
+  region text null,
+  last_activity_at timestamptz null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_users_status on users(status);
+create index if not exists idx_users_region on users(region);
+create index if not exists idx_users_last_activity on users(last_activity_at);
 
 create table if not exists user_identities (
   id uuid primary key default gen_random_uuid(),
@@ -123,6 +127,7 @@ create table if not exists task_submissions (
   status text not null default 'submitted',
   review_note text null,
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   constraint chk_task_submissions_status check (status in ('submitted', 'approved', 'rejected'))
 );
 
@@ -198,7 +203,10 @@ create table if not exists vault_email_otps (
   code_hash text not null,
   expires_at timestamptz not null,
   consumed_at timestamptz null,
-  created_at timestamptz not null default now()
+  attempts smallint not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint chk_vault_email_otps_attempts check (attempts >= 0)
 );
 
 create index if not exists idx_vault_email_otps_user_expires on vault_email_otps(user_id, expires_at desc);
@@ -209,7 +217,9 @@ create table if not exists vault_sessions (
   family_id uuid not null references families(id) on delete cascade,
   issued_at timestamptz not null default now(),
   expires_at timestamptz not null,
-  revoked_at timestamptz null
+  revoked_at timestamptz null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_vault_sessions_user_family_expires on vault_sessions(user_id, family_id, expires_at desc);
@@ -232,6 +242,8 @@ create table if not exists scenario_instances (
   status text not null default 'enabled',
   config jsonb not null default '{}'::jsonb,
   enabled_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   constraint chk_scenario_instances_status check (status in ('enabled', 'disabled'))
 );
 
@@ -250,5 +262,20 @@ create table if not exists audit_logs (
 
 create index if not exists idx_audit_logs_family_created on audit_logs(family_id, created_at desc);
 create index if not exists idx_audit_logs_action on audit_logs(action);
+
+create table if not exists vip_subscriptions (
+  user_id uuid primary key references users(id) on delete cascade,
+  tier text not null default 'free',
+  started_at timestamptz not null default now(),
+  expires_at timestamptz null,
+  auto_renew boolean not null default false,
+  payment_provider text null,
+  payment_id text null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint chk_vip_subscriptions_tier check (tier in ('free', 'basic', 'premium', 'enterprise'))
+);
+
+create index if not exists idx_vip_subscriptions_tier on vip_subscriptions(tier);
 
 commit;

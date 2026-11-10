@@ -70,6 +70,9 @@ jobs:
         run: ruff format --check app/ tests/ migrations/
         continue-on-error: true
 
+      - name: schema.sql 与 ORM 一致性
+        run: python scripts/check_schema_sync.py
+
   # ---------------------------------------------------------------
   # 3. 测试 —— pytest（SQLite 内存库，无需外部服务）
   # ---------------------------------------------------------------

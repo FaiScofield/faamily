@@ -641,6 +641,13 @@ class VaultEmailOtp(TimestampMixin, Base):
         DateTime(timezone=True),
         nullable=True,
     )
+    attempts: Mapped[int] = mapped_column(
+        SmallInteger,
+        nullable=False,
+        default=0,
+        server_default="0",
+        comment="Failed verification attempts against this OTP",
+    )
 
     __table_args__ = (
         Index("idx_vault_email_otps_user_expires", "user_id", "expires_at"),
