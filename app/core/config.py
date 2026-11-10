@@ -24,5 +24,14 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
 
+    # CORS allowed origins (comma-separated). Empty means same-origin only,
+    # which is the default for the Nginx-proxied deployment where the web UI
+    # and the API share one origin.
+    cors_origins: str = ""
+
+    # Trusted proxy hops for X-Forwarded-For. 0 means do not trust the header
+    # at all (direct access only); 1 is the typical setup behind one Nginx.
+    trusted_proxy_hops: int = 0
+
 
 settings = Settings()

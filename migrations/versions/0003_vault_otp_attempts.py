@@ -25,51 +25,45 @@ def upgrade() -> None:
     conn = op.get_bind()
     is_sqlite = conn.dialect.name == "sqlite"
 
-    op.add_column(
-        "vault_email_otps",
-        sa.Column(
-            "attempts",
-            sa.SmallInteger(),
-            nullable=False,
-            server_default=sa.text("0"),
-        ),
-    )
-
-    if not is_sqlite:
-        op.create_check_constraint(
-            "chk_vault_email_otps_attempts",
-            "vault_email_otps",
-            "attempts >= 0",
-        )
-
-    # Backfill updated_at on tables whose ORM model uses TimestampMixin
-    for table in ("task_submissions", "vault_email_otps", "vault_sessions", "scenario_instances"):
-        _add_updated_at(table, is_sqlite)
-
-
-def _add_updated_at(table: str, is_sqlite: bool) -> None:
-    """Add an `updated_at` column mirroring `created_at` semantics."""
-    if is_sqlite:
+    if not _has_column(conn, "vault_email_otps", "attempts"):
         op.add_column(
-            table,
+            "vault_email_otps",
             sa.Column(
-                "updated_at",
-                sa.DateTime(timezone=True),
+                "attempts",
+                sa.SmallInteger(),
                 nullable=False,
-                server_default=sa.func.now(),
+                server_default=sa.text("0"),
             ),
         )
-        return
 
-    op.add_column(
-        table,
-        sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            nullable=False,
-            server_default=sa.func.now(),
-        ),
-    )
+        if not is_sqlite:
+            op.create_check_constraint(
+                "chk_vault_email_otps_attempts",
+                "vault_email_otps",
+                "attempts >= 0",
+            )
+
+    # Backfill updated_at on tables whose ORM model uses TimestampMixin.
+    # Idempotent: a column that is already present is left alone.
+    for table in ("task_submissions", "vault_email_otps", "vault_sessions", "scenario_instances"):
+        if not _has_column(conn, table, "updated_at"):
+            op.add_column(
+                table,
+                sa.Column(
+                    "updated_at",
+                    sa.DateTime(timezone=True),
+                    nullable=False,
+                    server_default=sa.func.now(),
+                ),
+            )
+
+
+def _has_column(conn, table: str, column: str) -> bool:
+    """Check whether a column exists, in a dialect-agnostic way."""
+    inspector = sa.inspect(conn)
+    if table not in inspector.get_table_names():
+        return False
+    return any(c["name"] == column for c in inspector.get_columns(table))
 
 
 def downgrade() -> None:
@@ -77,14 +71,16 @@ def downgrade() -> None:
     conn = op.get_bind()
     is_sqlite = conn.dialect.name == "sqlite"
 
-    if not is_sqlite:
+    if not is_sqlite and _has_column(conn, "vault_email_otps", "attempts"):
         op.drop_constraint(
             "chk_vault_email_otps_attempts",
             "vault_email_otps",
             type_="check",
         )
 
-    op.drop_column("vault_email_otps", "attempts")
+    if _has_column(conn, "vault_email_otps", "attempts"):
+        op.drop_column("vault_email_otps", "attempts")
 
     for table in ("task_submissions", "vault_email_otps", "vault_sessions", "scenario_instances"):
-        op.drop_column(table, "updated_at")
+        if _has_column(conn, table, "updated_at"):
+            op.drop_column(table, "updated_at")

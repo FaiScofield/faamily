@@ -97,6 +97,12 @@ jobs:
           JWT_SECRET: ci-test-secret
         run: pytest tests -v --tb=short
 
+      - name: schema 一致性（迁移链 ↔ ORM）
+        env:
+          DATABASE_URL: sqlite://
+          JWT_SECRET: ci-test-secret
+        run: pytest tests/test_schema_consistency.py -v --tb=short
+
   # ---------------------------------------------------------------
   # 4. 应用自检 —— 确认 FastAPI 应用可正常装配
   # ---------------------------------------------------------------

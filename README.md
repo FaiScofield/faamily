@@ -10,7 +10,7 @@
 | 前端 | 原生微信小程序（10 个页面，4 个 tab） |
 | 规模 | 63 个 `/v1` 端点 · 18 张表 · 后端 ~7.6k 行 / 小程序 ~4.1k 行 |
 | 质量 | ruff · pytest（18 用例）· detect-secrets 密钥扫描 · GitHub Actions CI |
-| 版本 | API `0.7.0` · 迁移 head `0003_vault_otp_attempts` |
+| 版本 | API `0.7.0` · 迁移 head `0004_backfill_created_at` |
 
 ---
 
@@ -344,18 +344,19 @@ scripts/check_schema_sync.py       schema.sql ↔ ORM 一致性校验（CI 中�
 ```bash
 pip install -r requirements-dev.txt   # pytest / ruff / detect-secrets
 
-pytest tests -q                       # 35 个用例
+pytest tests -q                       # 70 个用例
 python scripts/check_schema_sync.py    # schema.sql ↔ ORM 一致性
 ruff check app/ tests/ migrations/    # 代码规范
 ```
 
-当前 35 个用例，覆盖：
+当前 70 个用例，覆盖：
 
 - 邮箱 OTP —— 发送成功语义、验证码校验通过/拒绝、identity 标记已验证
 - 微信登录 —— 配置缺失返回 503、微信错误码、上游失败 502、unionid 优先绑定、openid 用户复用
 - 成员角色 —— 拒绝遗留的 `child` 角色值
 - 场景模板 —— 启用时幂等创建默认文件夹
 - **保险箱（17 个用例）** —— 验证码不回传响应体、SMTP 缺失返回 503、邮箱归属校验、失败次数上限、旧码作废、vault 资源需 session、省略 `zone` 时 vault 被排除、过期 session 不放行、共享分区不受影响、vault 目录禁止夹带文件、验证码只存哈希
+- **Schema 一致性（35 个用例）** —— 迁移链产出的表与 ORM 逐列比对，防止迁移与模型漂移
 
 **尚未覆盖**：任务状态机全路径、配额并发扣减、邀请码加入流程。
 

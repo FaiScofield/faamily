@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -14,14 +15,32 @@ from app.core.config import settings
 
 
 def _get_client_ip(request: Request) -> str:
-    """Extract client IP from request, supporting proxy headers."""
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Extract client IP for rate limiting.
+
+    ``X-Forwarded-For`` is only honoured when ``TRUSTED_PROXY_HOPS`` is set,
+    because the header is trivially spoofable. Without a trusted proxy in
+    front, an attacker could rotate the header to dodge the rate limiter.
+    """
+    hops = settings.trusted_proxy_hops
+    if hops > 0:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+            if len(parts) >= hops:
+                # Rightmost entry is appended by the closest proxy.
+                return parts[-hops]
     return get_remote_address(request)
 
 
 limiter = Limiter(key_func=_get_client_ip)
+
+
+def _cors_origins() -> list[str]:
+    """Parse the comma-separated CORS origin allowlist."""
+    raw = (settings.cors_origins or "").strip()
+    if not raw:
+        return []
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
 
 def create_app() -> FastAPI:
@@ -32,6 +51,19 @@ def create_app() -> FastAPI:
     )
 
     app.state.limiter = limiter
+
+    # CORS: only enabled when an explicit allowlist is configured. The
+    # Nginx deployment serves the web UI and the API from one origin, so the
+    # default (empty) works without any CORS headers at all.
+    origins = _cors_origins()
+    if origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     @app.get("/health")
     def health():

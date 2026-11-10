@@ -1,7 +1,11 @@
 """Alembic environment configuration.
 
-Reads DATABASE_URL from app settings and applies migrations
-against the target PostgreSQL database.
+Resolves the target database from (in order of precedence):
+  1. an explicit ``sqlalchemy.url`` passed in the Alembic Config (used by
+     tests and by tooling that needs to target a specific database)
+  2. the ``DATABASE_URL`` environment variable / application settings
+
+Applies migrations against the target database.
 """
 
 from logging.config import fileConfig
@@ -14,8 +18,16 @@ from app.core.config import settings
 # Alembic Config object
 config = context.config
 
-# Set the SQLAlchemy URL from app settings
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Resolve the URL: an explicitly supplied one wins over the app settings.
+# This keeps `alembic upgrade head` working with just DATABASE_URL set,
+# while letting tests point the migration chain at a throwaway database.
+# The placeholder in alembic.ini counts as "not supplied" — it is detected by
+# its scheme rather than matched literally, so editing alembic.ini later
+# cannot silently break this.
+_configured_url = config.get_main_option("sqlalchemy.url") or ""
+_is_placeholder = not _configured_url or "driver://" in _configured_url
+if _is_placeholder:
+    config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
